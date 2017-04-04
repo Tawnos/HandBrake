@@ -390,7 +390,7 @@ namespace HandBrakeWPF.Services.Presets.Factories
                 IList<string> names = LanguageUtilities.GetLanguageNames(importedPreset.AudioLanguageList);
                 foreach (var name in names)
                 {
-                    preset.AudioTrackBehaviours.SelectedLangauges.Add(name);
+                    preset.AudioTrackBehaviours.SelectedLanguages.Add(name);
                 }
             }
 
@@ -535,7 +535,7 @@ namespace HandBrakeWPF.Services.Presets.Factories
             // Audio
             preset.AudioCopyMask = export.Task.AllowedPassthruOptions.AllowedPassthruOptions.Select(EnumHelper<AudioEncoder>.GetShortName).ToList();
             preset.AudioEncoderFallback = EnumHelper<AudioEncoder>.GetShortName(export.Task.AllowedPassthruOptions.AudioEncoderFallback);
-            preset.AudioLanguageList = LanguageUtilities.GetLanguageCodes(export.AudioTrackBehaviours.SelectedLangauges);
+            preset.AudioLanguageList = LanguageUtilities.GetLanguageCodes(export.AudioTrackBehaviours.SelectedLanguages);
             preset.AudioTrackSelectionBehavior = EnumHelper<AudioBehaviourModes>.GetShortName(export.AudioTrackBehaviours.SelectedBehaviour);
             preset.AudioSecondaryEncoderMode = export.AudioTrackBehaviours.SelectedTrackDefaultBehaviour == AudioTrackDefaultsMode.FirstTrack; // TODO -> We don't support AllTracks yet in other GUIs.
             preset.AudioList = new List<AudioList>();

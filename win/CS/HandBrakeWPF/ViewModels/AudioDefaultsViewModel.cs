@@ -392,7 +392,7 @@ namespace HandBrakeWPF.ViewModels
                 foreach (string item in copiedList)
                 {
                     this.AvailableLanguages.Remove(item);
-                    this.AudioBehaviours.SelectedLangauges.Add(item);
+                    this.AudioBehaviours.SelectedLanguages.Add(item);
                 }
 
                 this.AvailableLanguages = new BindingList<string>(this.AvailableLanguages.OrderBy(o => o).ToList());
@@ -409,7 +409,7 @@ namespace HandBrakeWPF.ViewModels
                 List<string> copiedList = this.SelectedLangaugesToMove.ToList();
                 foreach (string item in copiedList)
                 {
-                    this.AudioBehaviours.SelectedLangauges.Remove(item);
+                    this.AudioBehaviours.SelectedLanguages.Remove(item);
                     this.AvailableLanguages.Add(item);
                 }
             }
@@ -422,13 +422,13 @@ namespace HandBrakeWPF.ViewModels
         /// </summary>
         public void LanguageClearAll()
         {
-            foreach (string item in this.AudioBehaviours.SelectedLangauges)
+            foreach (string item in this.AudioBehaviours.SelectedLanguages)
             {
                 this.AvailableLanguages.Add(item);
             }
             this.AvailableLanguages = new BindingList<string>(this.AvailableLanguages.OrderBy(o => o).ToList());
 
-            this.AudioBehaviours.SelectedLangauges.Clear();
+            this.AudioBehaviours.SelectedLanguages.Clear();
         }
 
         #endregion
@@ -480,10 +480,10 @@ namespace HandBrakeWPF.ViewModels
 
                 this.NotifyOfPropertyChange(() => this.BehaviourTracks);
                 
-                foreach (string selectedItem in behaviours.SelectedLangauges)
+                foreach (string selectedItem in behaviours.SelectedLanguages)
                 {
                     this.AvailableLanguages.Remove(selectedItem);
-                    this.AudioBehaviours.SelectedLangauges.Add(selectedItem);
+                    this.AudioBehaviours.SelectedLanguages.Add(selectedItem);
                 }
             }
 

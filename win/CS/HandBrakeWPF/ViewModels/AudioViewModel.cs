@@ -436,27 +436,20 @@ namespace HandBrakeWPF.ViewModels
         /// </summary>
         private void AddFirstForSelectedLanguages()
         {
-            foreach (Audio sourceTrack in this.GetSelectedLanguagesTracks())
+            IEnumerable<Audio> selectedTracks = this.GetSelectedLanguagesTracks();
+
+            IEnumerable<Audio> filteredTracks = selectedTracks.Where(
+                selectedTrack => 
+                    !this.Task.AudioTracks.Any(
+                        candidateTrack => 
+                            candidateTrack.ScannedTrack != null
+                         && selectedTrack.LanguageCode.Contains(candidateTrack.ScannedTrack.LanguageCode)
+                    )
+            );
+
+            foreach (Audio sourceTrack in selectedTracks)
             {
-                // Step 2: Check if the track list already contrains this track
-                bool found = this.Task.AudioTracks.Any(audioTrack => Equals(audioTrack.ScannedTrack, sourceTrack));
-                if (!found)
-                {
-                    // Check if we are already using this language
-                    bool foundLanguage = false;
-                    foreach (var item in this.Task.AudioTracks.Where(item => item.ScannedTrack != null && sourceTrack.LanguageCode.Contains(item.ScannedTrack.LanguageCode)))
-                    {
-                        foundLanguage = true;
-                    }
-
-                    if (foundLanguage)
-                    {
-                        continue;
-                    }
-
-                    // If it doesn't, add it.
-                    this.Add(sourceTrack, true);
-                }
+                this.Add(sourceTrack, true);
             }
         }
 
@@ -471,9 +464,9 @@ namespace HandBrakeWPF.ViewModels
             // The first track in the selected languages list is considered the preferred language.
             // So, try match tracks on this.
             IEnumerable<Audio> preferredAudioTracks = new List<Audio>();
-            if (this.AudioBehaviours.SelectedLangauges.Count > 0)
+            if (this.AudioBehaviours.SelectedLanguages.Count > 0)
             {
-                string langName = this.AudioBehaviours.SelectedLangauges.FirstOrDefault(w => !w.Equals(Constants.Any));
+                string langName = this.AudioBehaviours.SelectedLanguages.FirstOrDefault(w => !w.Equals(Constants.Any));
                 if (!string.IsNullOrEmpty(langName))
                 {
                     preferredAudioTracks = this.SourceTracks.Where(item => item.Language.Contains(langName));
@@ -493,7 +486,7 @@ namespace HandBrakeWPF.ViewModels
         {
             List<Audio> trackList = new List<Audio>();
 
-            List<string> isoCodes = LanguageUtilities.GetLanguageCodes(this.AudioBehaviours.SelectedLangauges.ToArray());
+            List<string> isoCodes = LanguageUtilities.GetLanguageCodes(this.AudioBehaviours.SelectedLanguages.ToArray());
 
             if (isoCodes.Contains(Constants.Undefined))
             {

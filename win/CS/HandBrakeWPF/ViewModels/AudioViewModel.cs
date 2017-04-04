@@ -426,7 +426,7 @@ namespace HandBrakeWPF.ViewModels
                 case AudioBehaviourModes.FirstMatch: // Adding all remaining audio tracks
                     this.AddFirstForSelectedLanguages();
                     break;
-                case AudioBehaviourModes.AllMatching: // Add Langauges tracks for the additional languages selected, in-order.
+                case AudioBehaviourModes.AllMatching: // Add Languages tracks for the additional languages selected, in-order.
                     this.AddAllRemainingForSelectedLanguages();
                     break;
             }

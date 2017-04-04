@@ -47,7 +47,7 @@ namespace HandBrakeWPF.ViewModels
             this.Task = task;
             this.AudioBehaviours = new AudioBehaviours();
             this.SelectedAvailableToMove = new BindingList<Language>();
-            this.SelectedLangaugesToMove = new BindingList<Language>();
+            this.SelectedLanguagesToMove = new BindingList<Language>();
             this.AvailableLanguages = new BindingList<Language>();
             this.AudioEncoders = EnumHelper<AudioEncoder>.GetEnumList();
             this.Mixdowns = new BindingList<HBMixdown>(HandBrakeEncoderHelpers.Mixdowns);
@@ -123,14 +123,14 @@ namespace HandBrakeWPF.ViewModels
         }
 
         /// <summary>
-        /// Gets SelectedLangauges.
+        /// Gets SelectedLanguages.
         /// </summary>
         public BindingList<Language> SelectedAvailableToMove { get; private set; }
 
         /// <summary>
-        /// Gets SelectedLangauges.
+        /// Gets SelectedLanguages.
         /// </summary>
-        public BindingList<Language> SelectedLangaugesToMove { get; private set; }
+        public BindingList<Language> SelectedLanguagesToMove { get; private set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether audio allow m p 3 pass.
@@ -405,9 +405,9 @@ namespace HandBrakeWPF.ViewModels
         /// </summary>
         public void LanguageMoveLeft()
         {
-            if (this.SelectedLangaugesToMove.Count > 0)
+            if (this.SelectedLanguagesToMove.Count > 0)
             {
-                List<Language> copiedList = this.SelectedLangaugesToMove.ToList();
+                List<Language> copiedList = this.SelectedLanguagesToMove.ToList();
                 foreach (Language item in copiedList)
                 {
                     this.AudioBehaviours.SelectedLanguages.Remove(item);

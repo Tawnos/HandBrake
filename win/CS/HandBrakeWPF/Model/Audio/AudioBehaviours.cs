@@ -21,7 +21,7 @@ namespace HandBrakeWPF.Model.Audio
     public class AudioBehaviours : PropertyChangedBase
     {
         private AudioBehaviourModes selectedBehaviour;
-        private BindingList<Language> selectedLangauges;
+        private BindingList<Language> selectedLanguages;
         private AudioTrackDefaultsMode trackDefaultBehaviour;
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace HandBrakeWPF.Model.Audio
         {
             this.SelectedBehaviour = behaviours.SelectedBehaviour;
             this.SelectedTrackDefaultBehaviour = behaviours.SelectedTrackDefaultBehaviour;
-            this.SelectedLanguages = new BindingList<Language>(behaviours.selectedLangauges.ToList());
+            this.SelectedLanguages = new BindingList<Language>(behaviours.selectedLanguages.ToList());
             this.BehaviourTracks = behaviours.BehaviourTracks;
         }
 
@@ -91,21 +91,21 @@ namespace HandBrakeWPF.Model.Audio
         }
 
         /// <summary>
-        /// Gets or sets the selected langauges.
+        /// Gets or sets the selected languages.
         /// </summary>
         public BindingList<Language> SelectedLanguages
         {
             get
             {
-                return this.selectedLangauges;
+                return this.selectedLanguages;
             }
             set
             {
-                if (Equals(value, this.selectedLangauges))
+                if (Equals(value, this.selectedLanguages))
                 {
                     return;
                 }
-                this.selectedLangauges = value;
+                this.selectedLanguages = value;
                 this.NotifyOfPropertyChange(() => this.SelectedLanguages);
             }
         }

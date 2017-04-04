@@ -24,13 +24,14 @@ namespace HandBrakeWPF.ViewModels
     using HandBrakeWPF.Services.Presets.Model;
     using HandBrakeWPF.Utilities;
     using HandBrakeWPF.ViewModels.Interfaces;
+    using HandBrake.ApplicationServices.Interop.Model;
 
     /// <summary>
     /// The Audio View Model
     /// </summary>
     public class AudioDefaultsViewModel : ViewModelBase, IAudioDefaultsViewModel
     {
-        private BindingList<string> availableLanguages;
+        private BindingList<Language> availableLanguages;
         private AudioBehaviours audioBehaviours;
         private EncodeTask task;
         #region Constructors and Destructors
@@ -45,9 +46,9 @@ namespace HandBrakeWPF.ViewModels
         {
             this.Task = task;
             this.AudioBehaviours = new AudioBehaviours();
-            this.SelectedAvailableToMove = new BindingList<string>();
-            this.SelectedLangaugesToMove = new BindingList<string>();
-            this.AvailableLanguages = new BindingList<string>();
+            this.SelectedAvailableToMove = new BindingList<Language>();
+            this.SelectedLangaugesToMove = new BindingList<Language>();
+            this.AvailableLanguages = new BindingList<Language>();
             this.AudioEncoders = EnumHelper<AudioEncoder>.GetEnumList();
             this.Mixdowns = new BindingList<HBMixdown>(HandBrakeEncoderHelpers.Mixdowns);
 
@@ -124,12 +125,12 @@ namespace HandBrakeWPF.ViewModels
         /// <summary>
         /// Gets SelectedLangauges.
         /// </summary>
-        public BindingList<string> SelectedAvailableToMove { get; private set; }
+        public BindingList<Language> SelectedAvailableToMove { get; private set; }
 
         /// <summary>
         /// Gets SelectedLangauges.
         /// </summary>
-        public BindingList<string> SelectedLangaugesToMove { get; private set; }
+        public BindingList<Language> SelectedLangaugesToMove { get; private set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether audio allow m p 3 pass.
@@ -316,7 +317,7 @@ namespace HandBrakeWPF.ViewModels
         /// <summary>
         /// Gets AvailableLanguages.
         /// </summary>
-        public BindingList<string> AvailableLanguages
+        public BindingList<Language> AvailableLanguages
         {
             get
             {
@@ -388,14 +389,14 @@ namespace HandBrakeWPF.ViewModels
         {
             if (this.SelectedAvailableToMove.Count > 0)
             {
-                List<string> copiedList = this.SelectedAvailableToMove.ToList();
-                foreach (string item in copiedList)
+                List<Language> copiedList = this.SelectedAvailableToMove.ToList();
+                foreach (Language item in copiedList)
                 {
                     this.AvailableLanguages.Remove(item);
                     this.AudioBehaviours.SelectedLanguages.Add(item);
                 }
 
-                this.AvailableLanguages = new BindingList<string>(this.AvailableLanguages.OrderBy(o => o).ToList());
+                this.AvailableLanguages = new BindingList<Language>(this.AvailableLanguages.OrderBy(o => o.Display).ToList());
             }
         }
 
@@ -406,15 +407,15 @@ namespace HandBrakeWPF.ViewModels
         {
             if (this.SelectedLangaugesToMove.Count > 0)
             {
-                List<string> copiedList = this.SelectedLangaugesToMove.ToList();
-                foreach (string item in copiedList)
+                List<Language> copiedList = this.SelectedLangaugesToMove.ToList();
+                foreach (Language item in copiedList)
                 {
                     this.AudioBehaviours.SelectedLanguages.Remove(item);
                     this.AvailableLanguages.Add(item);
                 }
             }
 
-            this.AvailableLanguages = new BindingList<string>(this.AvailableLanguages.OrderBy(o => o).ToList());
+            this.AvailableLanguages = new BindingList<Language>(this.AvailableLanguages.OrderBy(o => o).ToList());
         }
 
         /// <summary>
@@ -422,11 +423,11 @@ namespace HandBrakeWPF.ViewModels
         /// </summary>
         public void LanguageClearAll()
         {
-            foreach (string item in this.AudioBehaviours.SelectedLanguages)
+            foreach (Language item in this.AudioBehaviours.SelectedLanguages)
             {
                 this.AvailableLanguages.Add(item);
             }
-            this.AvailableLanguages = new BindingList<string>(this.AvailableLanguages.OrderBy(o => o).ToList());
+            this.AvailableLanguages = new BindingList<Language>(this.AvailableLanguages.OrderBy(o => o).ToList());
 
             this.AudioBehaviours.SelectedLanguages.Clear();
         }
@@ -452,11 +453,10 @@ namespace HandBrakeWPF.ViewModels
             // Setup for this Encode Task.
             this.Task = task;
 
-            IDictionary<string, string> langList = LanguageUtilities.MapLanguages();
-            langList = (from entry in langList orderby entry.Key ascending select entry).ToDictionary(pair => pair.Key, pair => pair.Value);
+            IList<Language> langList = LanguageUtilities.MapLanguages().OrderBy(language => language.Display).ToList();
 
             this.AvailableLanguages.Clear();
-            foreach (string item in langList.Keys)
+            foreach (Language item in langList)
             {
                 this.AvailableLanguages.Add(item);
             }
@@ -480,7 +480,7 @@ namespace HandBrakeWPF.ViewModels
 
                 this.NotifyOfPropertyChange(() => this.BehaviourTracks);
                 
-                foreach (string selectedItem in behaviours.SelectedLanguages)
+                foreach (Language selectedItem in behaviours.SelectedLanguages)
                 {
                     this.AvailableLanguages.Remove(selectedItem);
                     this.AudioBehaviours.SelectedLanguages.Add(selectedItem);

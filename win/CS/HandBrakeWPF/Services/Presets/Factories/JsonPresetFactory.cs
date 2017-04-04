@@ -387,10 +387,10 @@ namespace HandBrakeWPF.Services.Presets.Factories
 
             if (importedPreset.AudioLanguageList != null)
             {
-                IList<string> names = LanguageUtilities.GetLanguageNames(importedPreset.AudioLanguageList);
-                foreach (var name in names)
+                IList<Language> languages = LanguageUtilities.GetLanguagesFromNames(importedPreset.AudioLanguageList);
+                foreach (var language in languages)
                 {
-                    preset.AudioTrackBehaviours.SelectedLanguages.Add(name);
+                    preset.AudioTrackBehaviours.SelectedLanguages.Add(language);
                 }
             }
 
@@ -429,10 +429,11 @@ namespace HandBrakeWPF.Services.Presets.Factories
             preset.SubtitleTrackBehaviours.AddForeignAudioScanTrack = importedPreset.SubtitleAddForeignAudioSearch;
             if (importedPreset.SubtitleLanguageList != null)
             {
-                IList<string> names = LanguageUtilities.GetLanguageNames(importedPreset.SubtitleLanguageList);
-                foreach (var name in names)
+                IList<Language> languages = LanguageUtilities.GetLanguagesFromNames(importedPreset.SubtitleLanguageList);
+
+                foreach (Language language in languages)
                 {
-                    preset.SubtitleTrackBehaviours.SelectedLangauges.Add(name);
+                    preset.SubtitleTrackBehaviours.SelectedLanguages.Add(language);
                 }
             }
 
@@ -535,7 +536,7 @@ namespace HandBrakeWPF.Services.Presets.Factories
             // Audio
             preset.AudioCopyMask = export.Task.AllowedPassthruOptions.AllowedPassthruOptions.Select(EnumHelper<AudioEncoder>.GetShortName).ToList();
             preset.AudioEncoderFallback = EnumHelper<AudioEncoder>.GetShortName(export.Task.AllowedPassthruOptions.AudioEncoderFallback);
-            preset.AudioLanguageList = LanguageUtilities.GetLanguageCodes(export.AudioTrackBehaviours.SelectedLanguages);
+            preset.AudioLanguageList = export.AudioTrackBehaviours.SelectedLanguages.Select(language => language.Code).ToList();
             preset.AudioTrackSelectionBehavior = EnumHelper<AudioBehaviourModes>.GetShortName(export.AudioTrackBehaviours.SelectedBehaviour);
             preset.AudioSecondaryEncoderMode = export.AudioTrackBehaviours.SelectedTrackDefaultBehaviour == AudioTrackDefaultsMode.FirstTrack; // TODO -> We don't support AllTracks yet in other GUIs.
             preset.AudioList = new List<AudioList>();
@@ -565,7 +566,7 @@ namespace HandBrakeWPF.Services.Presets.Factories
             preset.SubtitleBurnBDSub = false; // TODO not supported yet.
             preset.SubtitleBurnDVDSub = false; // TODO not supported yet.
             preset.SubtitleBurnBehavior = EnumHelper<SubtitleBurnInBehaviourModes>.GetShortName(export.SubtitleTrackBehaviours.SelectedBurnInBehaviour);
-            preset.SubtitleLanguageList = LanguageUtilities.GetLanguageCodes(export.SubtitleTrackBehaviours.SelectedLangauges);
+            preset.SubtitleLanguageList = export.SubtitleTrackBehaviours.SelectedLanguages.Select(language => language.Code).ToList();
             preset.SubtitleTrackSelectionBehavior = EnumHelper<SubtitleBehaviourModes>.GetShortName(export.SubtitleTrackBehaviours.SelectedBehaviour);
 
             // Chapters

@@ -13,6 +13,7 @@ namespace HandBrakeWPF.Model.Audio
     using System.Linq;
 
     using HandBrakeWPF.Utilities;
+    using HandBrake.ApplicationServices.Interop.Model;
 
     /// <summary>
     /// Audio Behaviours
@@ -20,7 +21,7 @@ namespace HandBrakeWPF.Model.Audio
     public class AudioBehaviours : PropertyChangedBase
     {
         private AudioBehaviourModes selectedBehaviour;
-        private BindingList<string> selectedLangauges;
+        private BindingList<Language> selectedLangauges;
         private AudioTrackDefaultsMode trackDefaultBehaviour;
 
         /// <summary>
@@ -30,7 +31,7 @@ namespace HandBrakeWPF.Model.Audio
         {
             this.SelectedBehaviour = AudioBehaviourModes.None;
             this.SelectedTrackDefaultBehaviour = AudioTrackDefaultsMode.None;
-            this.SelectedLanguages = new BindingList<string>();
+            this.SelectedLanguages = new BindingList<Language>();
             this.BehaviourTracks = new BindingList<AudioBehaviourTrack>();
         }
 
@@ -44,7 +45,7 @@ namespace HandBrakeWPF.Model.Audio
         {
             this.SelectedBehaviour = behaviours.SelectedBehaviour;
             this.SelectedTrackDefaultBehaviour = behaviours.SelectedTrackDefaultBehaviour;
-            this.SelectedLanguages = new BindingList<string>(behaviours.selectedLangauges.ToList());
+            this.SelectedLanguages = new BindingList<Language>(behaviours.selectedLangauges.ToList());
             this.BehaviourTracks = behaviours.BehaviourTracks;
         }
 
@@ -92,7 +93,7 @@ namespace HandBrakeWPF.Model.Audio
         /// <summary>
         /// Gets or sets the selected langauges.
         /// </summary>
-        public BindingList<string> SelectedLanguages
+        public BindingList<Language> SelectedLanguages
         {
             get
             {
@@ -125,7 +126,7 @@ namespace HandBrakeWPF.Model.Audio
             AudioBehaviours cloned = new AudioBehaviours
             {
                 SelectedBehaviour = this.selectedBehaviour,
-                SelectedLanguages = new BindingList<string>(),
+                SelectedLanguages = new BindingList<Language>(),
                 SelectedTrackDefaultBehaviour = this.SelectedTrackDefaultBehaviour,
                 BehaviourTracks = this.BehaviourTracks
             };

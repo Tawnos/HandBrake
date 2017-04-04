@@ -13,6 +13,7 @@ namespace HandBrakeWPF.Model.Subtitles
     using System.Linq;
 
     using HandBrakeWPF.Utilities;
+    using HandBrake.ApplicationServices.Interop.Model;
 
     /// <summary>
     ///  A class to track the behaviours of audio track selection
@@ -20,7 +21,7 @@ namespace HandBrakeWPF.Model.Subtitles
     public class SubtitleBehaviours : PropertyChangedBase
     {
         private SubtitleBehaviourModes selectedBehaviour;
-        private BindingList<string> selectedLangauges;
+        private BindingList<Language> selectedLanguages;
         private bool addForeignAudioScanTrack;
         private bool addClosedCaptions;
         private SubtitleBurnInBehaviourModes selectedBurnInBehaviour;
@@ -32,7 +33,7 @@ namespace HandBrakeWPF.Model.Subtitles
         {
             this.SelectedBehaviour = SubtitleBehaviourModes.None;
             this.SelectedBurnInBehaviour = SubtitleBurnInBehaviourModes.None;
-            this.SelectedLangauges = new BindingList<string>();
+            this.SelectedLanguages = new BindingList<Language>();
         }
 
         /// <summary>
@@ -45,7 +46,7 @@ namespace HandBrakeWPF.Model.Subtitles
         {
             this.SelectedBehaviour = behaviours.selectedBehaviour;
             this.SelectedBurnInBehaviour = behaviours.selectedBurnInBehaviour;
-            this.SelectedLangauges = new BindingList<string>(behaviours.SelectedLangauges.ToList());
+            this.SelectedLanguages = new BindingList<Language>(behaviours.SelectedLanguages.ToList());
             this.AddClosedCaptions = behaviours.AddClosedCaptions;
             this.AddForeignAudioScanTrack = behaviours.AddForeignAudioScanTrack;
         }
@@ -93,20 +94,20 @@ namespace HandBrakeWPF.Model.Subtitles
         /// <summary>
         /// Gets or sets the selected langages.
         /// </summary>
-        public BindingList<string> SelectedLangauges
+        public BindingList<Language> SelectedLanguages
         {
             get
             {
-                return this.selectedLangauges;
+                return this.selectedLanguages;
             }
             set
             {
-                if (Equals(value, this.selectedLangauges))
+                if (Equals(value, this.selectedLanguages))
                 {
                     return;
                 }
-                this.selectedLangauges = value;
-                this.NotifyOfPropertyChange(() => this.SelectedLangauges);
+                this.selectedLanguages = value;
+                this.NotifyOfPropertyChange(() => this.SelectedLanguages);
             }
         }
 
@@ -162,14 +163,14 @@ namespace HandBrakeWPF.Model.Subtitles
             {
                 SelectedBehaviour = this.selectedBehaviour, 
                 SelectedBurnInBehaviour = this.selectedBurnInBehaviour, 
-                SelectedLangauges = new BindingList<string>(), 
+                SelectedLanguages = new BindingList<Language>(), 
                 AddClosedCaptions = this.addClosedCaptions, 
                 AddForeignAudioScanTrack = this.addForeignAudioScanTrack, 
             };
 
-            foreach (var item in this.SelectedLangauges)
+            foreach (var item in this.SelectedLanguages)
             {
-                cloned.SelectedLangauges.Add(item);
+                cloned.SelectedLanguages.Add(item);
             }
 
             return cloned;

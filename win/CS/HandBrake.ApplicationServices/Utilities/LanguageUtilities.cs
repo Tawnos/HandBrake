@@ -9,6 +9,7 @@
 
 namespace HandBrake.ApplicationServices.Utilities
 {
+    using Interop.Model;
     using System.Collections.Generic;
     using System.Collections.Specialized;
     using System.Linq;
@@ -21,20 +22,22 @@ namespace HandBrake.ApplicationServices.Utilities
         /// <summary>
         /// The language map.
         /// </summary>
-        private static IDictionary<string, string> languageMap;
+        private static IDictionary<string, Language> languageMap;
 
         /// <summary>
         /// Map languages and their iso639_2 value into a IDictionary
         /// </summary>
         /// <returns>A Dictionary containing the language and iso code</returns>
-        public static IDictionary<string, string> MapLanguages()
+        public static IList<Language> MapLanguages()
         {
             if (languageMap != null)
             {
-                return languageMap;
+                return languageMap.Values.ToList();
             }
 
-            languageMap = new Dictionary<string, string>
+            languageMap = new Dictionary<string, Language>();
+
+            string[,] languagesCodes = new string[,]
                           {
                               { "(Any)", "und" },
                               { "Afar", "aar" },
@@ -224,7 +227,17 @@ namespace HandBrake.ApplicationServices.Utilities
                               { "Zulu", "zul" }
                           };
 
-            return languageMap;
+            for (int i = 0; i < languagesCodes.GetLength(0); i++)
+            {
+                string englishName = languagesCodes[i, 0];
+                // TODO: Add native language names
+                string nativeName = languagesCodes[i, 0];
+                string code = languagesCodes[i, 1];
+
+                languageMap[englishName] = new Language(englishName, nativeName, code);
+            }
+
+            return languageMap.Values.ToList();
         }
 
         /// <summary>
@@ -242,10 +255,10 @@ namespace HandBrake.ApplicationServices.Utilities
             List<string> iso6392Codes = new List<string>();
             foreach (var item in userLanguages)
             {
-                string isoCode;
-                if (MapLanguages().TryGetValue(item, out isoCode))
+                Language language;
+                if (languageMap.TryGetValue(item, out language))
                 {
-                    iso6392Codes.Add(isoCode);
+                    iso6392Codes.Add(language.Code);
                 }
             }
 
@@ -261,17 +274,9 @@ namespace HandBrake.ApplicationServices.Utilities
         /// <returns>
         /// The <see cref="List"/>.
         /// </returns>
-        public static List<string> GetLanguageNames(IList<string> languageCodes)
+        public static List<Language> GetLanguagesFromNames(IList<string> languageCodes)
         {
-            // Translate to Iso Codes
-            List<string> names = new List<string>();
-            foreach (var item in languageCodes)
-            {
-                KeyValuePair<string, string> name = MapLanguages().FirstOrDefault(v => v.Value == item);  // Slightly inefficient but small set anyway so not a big issue.
-                names.Add(name.Key);
-            }
-
-            return names;
+            return languageMap.Values.Where(language => languageCodes.Any(code => language.Code == code)).ToList();
         }
 
         /// <summary>
@@ -280,31 +285,31 @@ namespace HandBrake.ApplicationServices.Utilities
         /// <returns>
         /// The <see cref="List"/>.
         /// </returns>
-        public static List<string> GetIsoCodes()
+        public static List<string> GetAllLanguageCodes()
         {
-           return MapLanguages().Values.ToList();
+           return languageMap.Values.Select(language => language.Code).ToList();
         }
 
         /// <summary>
         /// The get language code.
         /// </summary>
-        /// <param name="language">
+        /// <param name="languageEnglishName">
         /// The language.
         /// </param>
         /// <returns>
         /// The <see cref="string"/>.
         /// </returns>
-        public static string GetLanguageCode(string language)
+        public static string GetLanguageCode(string languageEnglishName)
         {
-            if (string.IsNullOrEmpty(language))
+            if (string.IsNullOrEmpty(languageEnglishName))
             {
                 return null;
             }
 
-            string isoCode;
-            if (MapLanguages().TryGetValue(language, out isoCode))
+            Language language;
+            if (languageMap.TryGetValue(languageEnglishName, out language))
             {
-                return isoCode;
+                return language.Code;
             }
 
             return null;

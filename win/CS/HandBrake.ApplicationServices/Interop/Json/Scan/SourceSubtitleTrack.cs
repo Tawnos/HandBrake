@@ -18,7 +18,7 @@ namespace HandBrake.ApplicationServices.Interop.Json.Scan
         /// Gets or sets the format.
         /// </summary>
         public int Format { get; set; }
-
+        
         /// <summary>
         /// Gets or sets the language.
         /// </summary>

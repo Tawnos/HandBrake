@@ -17,6 +17,7 @@ namespace HandBrakeWPF.ViewModels
     using Caliburn.Micro;
 
     using HandBrake.ApplicationServices.Interop;
+    using HandBrake.ApplicationServices.Interop.Model;
     using HandBrake.ApplicationServices.Interop.Model.Encoding;
     using HandBrake.ApplicationServices.Utilities;
 
@@ -466,10 +467,10 @@ namespace HandBrakeWPF.ViewModels
             IEnumerable<Audio> preferredAudioTracks = new List<Audio>();
             if (this.AudioBehaviours.SelectedLanguages.Count > 0)
             {
-                string langName = this.AudioBehaviours.SelectedLanguages.FirstOrDefault(w => !w.Equals(Constants.Any));
-                if (!string.IsNullOrEmpty(langName))
+                Language language = this.AudioBehaviours.SelectedLanguages.FirstOrDefault(w => !w.EnglishName.Equals(Constants.Any));
+                if (language != null)
                 {
-                    preferredAudioTracks = this.SourceTracks.Where(item => item.Language.Contains(langName));
+                    preferredAudioTracks = this.SourceTracks.Where(item => item.LanguageCode.Contains(language.Code));
                 }
             }
 
@@ -486,16 +487,11 @@ namespace HandBrakeWPF.ViewModels
         {
             List<Audio> trackList = new List<Audio>();
 
-            List<string> isoCodes = LanguageUtilities.GetLanguageCodes(this.AudioBehaviours.SelectedLanguages.ToArray());
-
-            if (isoCodes.Contains(Constants.Undefined))
+            foreach (var language in this.AudioBehaviours.SelectedLanguages)
             {
-                isoCodes = LanguageUtilities.GetIsoCodes();
-            }
+                IEnumerable<Audio> sourceTracks = this.SourceTracks.Where(source => source.LanguageCode.Trim() == language.Code);
 
-            foreach (string code in isoCodes)
-            {
-                trackList.AddRange(this.SourceTracks.Where(source => source.LanguageCode.Trim() == code));
+                trackList.AddRange(sourceTracks);
             }
 
             return trackList;

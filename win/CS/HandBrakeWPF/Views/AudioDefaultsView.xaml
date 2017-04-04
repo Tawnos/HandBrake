@@ -89,7 +89,8 @@
 
                     <StackPanel Orientation="Vertical" Grid.Column="0">
                         <TextBlock Text="{x:Static Properties:ResourcesUI.Shared_AvailableLanguages}" Margin="0,0,0,5"/>
-                        <ListBox Name="availableLanguages" ItemsSource="{Binding AvailableLanguages}" 
+                        <ListBox Name="availableLanguages" ItemsSource="{Binding AvailableLanguages}"
+                                 DisplayMemberPath="Display"
                                      helpers:ListBoxHelper.SelectedItems="{Binding SelectedAvailableToMove}" 
                                              SelectionMode="Extended" Width="140" Height="120" />
                     </StackPanel>
@@ -104,8 +105,9 @@
 
                     <StackPanel Orientation="Vertical" Grid.Column="2">
                         <TextBlock Text="{x:Static Properties:ResourcesUI.Shared_ChosenLangages}"  Margin="0,0,0,5"/>
-                        <ListBox Name="selectedLangauges" ItemsSource="{Binding AudioBehaviours.SelectedLangauges}" 
-                                     helpers:ListBoxHelper.SelectedItems="{Binding SelectedLangaugesToMove}" 
+                        <ListBox Name="selectedLanguages" ItemsSource="{Binding AudioBehaviours.SelectedLanguages}" 
+                                 DisplayMemberPath="Display"
+                                     helpers:ListBoxHelper.SelectedItems="{Binding SelectedLanguagesToMove}" 
                                              SelectionMode="Extended" Width="140" Height="120"
                                              dd:DragDrop.DropHandler="{Binding}"
                                              dd:DragDrop.IsDragSource="True"
@@ -285,13 +287,13 @@
 
                             <TextBlock VerticalAlignment="Center" FontWeight="Bold" Text="{x:Static Properties:ResourcesUI.AudioView_DRC}" Grid.Column="10" 
                                        Visibility="{Binding IsPassthru, Converter={StaticResource boolToVisConverter}, ConverterParameter=true}" />
-                            <controls:NumberBox Name="drcNumericCtl" Width="45" Margin="5,0,5,0" HorizontalAlignment="Left" Grid.Column="11" 
+                            <controls:NumberBox x:Name="drcNumericCtl" Width="45" Margin="5,0,5,0" HorizontalAlignment="Left" Grid.Column="11" 
                                                     Minimum="0" Modulus="0.1" Maximum="4" Number="{Binding DRC, Mode=TwoWay}" UpdateBindingOnTextChange="True" ShowIncrementButtons="True" AllowEmpty="False"
                                                     Visibility="{Binding IsPassthru, Converter={StaticResource boolToHiddenVisConverter}, ConverterParameter=true}"/>
 
                             <TextBlock  VerticalAlignment="Center" FontWeight="Bold" Text="{x:Static Properties:ResourcesUI.AudioView_Gain}" Grid.Column="12" 
                                        Visibility="{Binding IsPassthru, Converter={StaticResource boolToVisConverter}, ConverterParameter=true}" />
-                            <controls:NumberBox Name="gainNumericCtl" Width="45" Margin="5,0,5,0" HorizontalAlignment="Left" Grid.Column="13" 
+                            <controls:NumberBox x:Name="gainNumericCtl" Width="45" Margin="5,0,5,0" HorizontalAlignment="Left" Grid.Column="13" 
                                                     Minimum="-20" Modulus="1" Maximum="20" Number="{Binding Gain, Mode=TwoWay}" UpdateBindingOnTextChange="True" ShowIncrementButtons="True" AllowEmpty="False"
                                                     Visibility="{Binding IsPassthru, Converter={StaticResource boolToHiddenVisConverter}, ConverterParameter=true}"/>
 

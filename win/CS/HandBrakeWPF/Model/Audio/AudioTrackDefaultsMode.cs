@@ -16,7 +16,7 @@ namespace HandBrakeWPF.Model.Audio
     /// </summary>
     public enum AudioTrackDefaultsMode
     {
-        [DisplayName("Default")]
+        [DisplayName("Do not add additional tracks")]
         None = 0,
 
         [DisplayName("Use First Track as template")]

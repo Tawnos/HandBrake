@@ -312,7 +312,7 @@ namespace HandBrakeWPF.ViewModels
         public void AddAllRemainingForSelectedLanguages()
         {
             // Add them if they are not already added.
-            foreach (Audio sourceTrack in this.GetSelectedLanguagesTracks())
+            foreach (Audio sourceTrack in this.GetTracksMatchingSelectedLanguages())
             {
                 // Step 2: Check if the track list already contrains this track
                 bool found = this.Task.AudioTracks.Any(audioTrack => Equals(audioTrack.ScannedTrack, sourceTrack));
@@ -423,34 +423,31 @@ namespace HandBrakeWPF.ViewModels
                 case AudioBehaviourModes.None:
                     this.Task.AudioTracks.Clear();
                     break;
-                case AudioBehaviourModes.FirstMatch: // Adding all remaining audio tracks
+                case AudioBehaviourModes.FirstMatch: // Add the first track for each language that matches the selected languaged, in-order.
                     this.AddFirstForSelectedLanguages();
                     break;
-                case AudioBehaviourModes.AllMatching: // Add Languages tracks for the additional languages selected, in-order.
+                case AudioBehaviourModes.AllMatching: // Add all tracks that match the selected languages, in-order.
                     this.AddAllRemainingForSelectedLanguages();
                     break;
             }
         }
 
         /// <summary>
-        /// The add first for selected languages.
+        /// Add the first track that matches the selected languages, preferring
+        /// those tracks that match the selected output format.
         /// </summary>
         private void AddFirstForSelectedLanguages()
         {
-            IEnumerable<Audio> selectedTracks = this.GetSelectedLanguagesTracks();
+            HashSet<string> addedLanguageCodes = new HashSet<string>();
 
-            IEnumerable<Audio> filteredTracks = selectedTracks.Where(
-                selectedTrack => 
-                    !this.Task.AudioTracks.Any(
-                        candidateTrack => 
-                            candidateTrack.ScannedTrack != null
-                         && selectedTrack.LanguageCode.Contains(candidateTrack.ScannedTrack.LanguageCode)
-                    )
-            );
-
-            foreach (Audio sourceTrack in selectedTracks)
+            foreach (Audio selectedTrack in GetTracksMatchingSelectedLanguages())
             {
-                this.Add(sourceTrack, true);
+                if (!addedLanguageCodes.Contains(selectedTrack.LanguageCode))
+                {
+                    addedLanguageCodes.Add(selectedTrack.LanguageCode);
+
+                    this.Add(selectedTrack, useBehaviourTemplateMode: true);
+                }
             }
         }
 
@@ -481,9 +478,9 @@ namespace HandBrakeWPF.ViewModels
         /// Gets a list of source tracks for the users selected languages.
         /// </summary>
         /// <returns>
-        /// A list of source audio tracks.
+        /// A list of source audio tracks that are of one of the selected languages.
         /// </returns>
-        private IEnumerable<Audio> GetSelectedLanguagesTracks()
+        private IEnumerable<Audio> GetTracksMatchingSelectedLanguages()
         {
             List<Audio> trackList = new List<Audio>();
 

@@ -146,6 +146,7 @@ namespace HandBrakeWPF.Services.Encode.Factories
                     Mp4Optimize = job.OptimizeMP4
                 },
                 ChapterMarkers = job.IncludeChapterMarkers,
+                AlignAVStart = job.AlignAVStart,
                 Mux = HBFunctions.hb_container_get_from_name(job.OutputFormat == OutputFormat.Mp4 ? "av_mp4" : "av_mkv"), // TODO tidy up.
                 ChapterList = new List<Chapter>()
             };
@@ -301,8 +302,6 @@ namespace HandBrakeWPF.Services.Encode.Factories
                 video.TwoPass = job.TwoPass;
                 video.Turbo = job.TurboFirstPass;
             }
-
-            video.OpenCL = configuration.ScalingMode == VideoScaler.BicubicCl;
 
             video.QSV.Decode = SystemInfo.IsQsvAvailable && !configuration.DisableQuickSyncDecoding;
 
@@ -477,6 +476,25 @@ namespace HandBrakeWPF.Services.Encode.Factories
                     : hb_filter_ids.HB_FILTER_NLMEANS;
 
                 IntPtr settingsPtr = HBFunctions.hb_generate_filter_settings_json((int)id, job.DenoisePreset.ToString().ToLower().Replace(" ", string.Empty), job.DenoiseTune.ToString().ToLower().Replace(" ", string.Empty), job.CustomDenoise);
+                string unparsedJson = Marshal.PtrToStringAnsi(settingsPtr);
+
+                if (!string.IsNullOrEmpty(unparsedJson))
+                {
+                    JToken settings = JObject.Parse(unparsedJson);
+
+                    Filter filterItem = new Filter { ID = (int)id, Settings = settings };
+                    filter.FilterList.Add(filterItem);
+                }
+            }
+
+            // Sharpen
+            if (job.Sharpen != Sharpen.Off)
+            {
+                hb_filter_ids id = job.Sharpen == Sharpen.LapSharp
+                    ? hb_filter_ids.HB_FILTER_LAPSHARP
+                    : hb_filter_ids.HB_FILTER_UNSHARP;
+
+                IntPtr settingsPtr = HBFunctions.hb_generate_filter_settings_json((int)id, job.SharpenPreset.Key, job.SharpenTune.Key, job.SharpenCustom);
                 string unparsedJson = Marshal.PtrToStringAnsi(settingsPtr);
 
                 if (!string.IsNullOrEmpty(unparsedJson))

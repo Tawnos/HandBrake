@@ -117,8 +117,8 @@
                             <Image Width="16" Height="16"  Source="Images/information.png" />
                         </MenuItem.Icon>
                     </MenuItem>
-                    <Separator />
-                    <MenuItem Header="_Check for Updates" cal:Message.Attach="[Event Click] = [Action CheckForUpdates]" />
+                    <Separator Visibility="{Binding IsUWP, Converter={StaticResource boolToVisConverter}, ConverterParameter=true}" />
+                    <MenuItem Header="_Check for Updates" cal:Message.Attach="[Event Click] = [Action CheckForUpdates]" Visibility="{Binding IsUWP, Converter={StaticResource boolToVisConverter}, ConverterParameter=true}" />
                     <Separator />
                     <MenuItem Header="_About..." cal:Message.Attach="[Event Click] = [Action OpenAboutApplication]" />
                 </MenuItem>
@@ -423,6 +423,15 @@
                                                    Converter={StaticResource boolToVisConverter},
                                                    ConverterParameter=true}"
                               />
+                    <CheckBox Name="AlignAVStart"
+                              Margin="8,0,0,0"
+                              VerticalAlignment="Center"
+                              Content="{x:Static Properties:ResourcesUI.MainView_AlignAVStart}"
+                              ToolTip="{x:Static Properties:ResourcesTooltips.MainView_AlignAVStart}"
+                              IsChecked="{Binding Path=AlignAVStart}"
+                              Visibility="{Binding IsMkv,
+                                                   Converter={StaticResource boolToVisConverter},
+                                                   ConverterParameter=true}" />
                     <CheckBox Name="iPod5G"
                               Margin="8,0,0,0"
                               VerticalAlignment="Center"
@@ -431,8 +440,7 @@
                               IsChecked="{Binding Path=IPod5GSupport}"
                               Visibility="{Binding IsMkv,
                                                    Converter={StaticResource boolToVisConverter},
-                                                   ConverterParameter=true}"
-                              />
+                                                   ConverterParameter=true}" />
                 </StackPanel>
             </StackPanel>
 

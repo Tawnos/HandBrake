@@ -607,6 +607,14 @@ struct hb_job_s
     int             mux;
     char          * file;
 
+    int             align_av_start;     // align A/V stream start times.
+                                        // This is used to work around mp4
+                                        // players that do not support edit
+                                        // lists. When this option is used
+                                        // the resulting stream is not a
+                                        // faithful reproduction of the source
+                                        // stream and may have blank frames
+                                        // added or initial frames dropped.
     int             mp4_optimize;
     int             ipod_atom;
 
@@ -626,7 +634,6 @@ struct hb_job_s
     uint32_t        frames_to_skip;     // decode but discard this many frames
                                         //  initially (for frame accurate positioning
                                         //  to non-I frames).
-    int use_opencl;
     PRIVATE int use_decomb;
     PRIVATE int use_detelecine;
 
@@ -671,13 +678,18 @@ struct hb_job_s
     hb_esconfig_t config;
 
     hb_mux_data_t * mux_data;
+
+    int64_t         reader_pts_offset; // Reader can discard some video.
+                                       // Other pipeline stages need to know
+                                       // this.  E.g. sync and decsrtsub
 #endif
 };
 
 /* Audio starts here */
 /* Audio Codecs: Update win/CS/HandBrake.Interop/HandBrakeInterop/HbLib/NativeConstants.cs when changing these consts */
 #define HB_ACODEC_INVALID   0x00000000
-#define HB_ACODEC_MASK      0x07FFFF00
+#define HB_ACODEC_NONE      0x00000001
+#define HB_ACODEC_MASK      0x07FFFF01
 #define HB_ACODEC_LAME      0x00000200
 #define HB_ACODEC_VORBIS    0x00000400
 #define HB_ACODEC_AC3       0x00000800
@@ -1017,9 +1029,6 @@ struct hb_title_s
 #define         HBTF_NO_IDR (1 << 0)
 #define         HBTF_SCAN_COMPLETE (1 << 1)
 #define         HBTF_RAW_VIDEO (1 << 2)
-
-    // whether OpenCL scaling is supported for this source
-    int             opencl_support;
 };
 
 // Update win/CS/HandBrake.Interop/HandBrakeInterop/HbLib/hb_state_s.cs when changing this struct
@@ -1218,12 +1227,15 @@ struct hb_filter_object_s
     hb_dict_t           * settings;
 
 #ifdef __LIBHB__
-    int                (* init)     ( hb_filter_object_t *, hb_filter_init_t * );
-    int                (* post_init)( hb_filter_object_t *, hb_job_t * );
-    int                (* work)     ( hb_filter_object_t *,
-                                      hb_buffer_t **, hb_buffer_t ** );
-    void               (* close)    ( hb_filter_object_t * );
-    hb_filter_info_t * (* info)     ( hb_filter_object_t * );
+    int                (* init)       ( hb_filter_object_t *, hb_filter_init_t * );
+    int                (* init_thread)( hb_filter_object_t *, int );
+    int                (* post_init)  ( hb_filter_object_t *, hb_job_t * );
+    int                (* work)       ( hb_filter_object_t *,
+                                        hb_buffer_t **, hb_buffer_t ** );
+    int                (* work_thread)( hb_filter_object_t *,
+                                        hb_buffer_t **, hb_buffer_t **, int );
+    void               (* close)      ( hb_filter_object_t * );
+    hb_filter_info_t * (* info)       ( hb_filter_object_t * );
 
     const char          * settings_template;
 
@@ -1242,6 +1254,8 @@ struct hb_filter_object_s
     // These are used to bridge the chapter to the next buffer
     int                   chapter_val;
     int64_t               chapter_time;
+
+    hb_filter_object_t  * sub_filter;
 #endif
 };
 
@@ -1266,6 +1280,8 @@ enum
     HB_FILTER_NLMEANS,
     HB_FILTER_RENDER_SUB,
     HB_FILTER_CROP_SCALE,
+    HB_FILTER_LAPSHARP,
+    HB_FILTER_UNSHARP,
     HB_FILTER_ROTATE,
     HB_FILTER_GRAYSCALE,
     HB_FILTER_PAD,
@@ -1278,7 +1294,9 @@ enum
     HB_FILTER_QSV_POST,
     // default MSDK VPP filter
     HB_FILTER_QSV,
-    HB_FILTER_LAST = HB_FILTER_QSV
+    HB_FILTER_LAST = HB_FILTER_QSV,
+    // wrapper filter for frame based multi-threading of simple filters
+    HB_FILTER_MT_FRAME
 };
 
 hb_filter_object_t * hb_filter_get( int filter_id );

@@ -198,12 +198,17 @@ static NSDictionary            *shortHeightAttr;
 
     if ((self.container & HB_MUX_MASK_MP4) && self.mp4HttpOptimize)
     {
-        [options appendString:@", Web optimized"];
+        [options appendString:@", Web Optimized"];
+    }
+
+    if ((self.container & HB_MUX_MASK_MP4) && self.alignAVStart)
+    {
+        [options appendString:@", Align A/V Start"];
     }
 
     if ((self.container & HB_MUX_MASK_MP4)  && self.mp4iPodCompatible)
     {
-        [options appendString:@", iPod 5G support"];
+        [options appendString:@", iPod 5G Support"];
     }
 
     if ([options hasPrefix:@", "])
@@ -316,6 +321,32 @@ static NSDictionary            *shortHeightAttr;
 
     }
 
+    // Sharpen
+    if (![filters.sharpen isEqualToString:@"off"])
+    {
+        [summary appendFormat:@", Sharpen (%@", [[[HBFilters sharpenTypesDict] allKeysForObject:filters.sharpen] firstObject]];
+        if (![filters.sharpenPreset isEqualToString:@"custom"])
+        {
+            [summary appendFormat:@", %@", [[[HBFilters sharpenPresetDict] allKeysForObject:filters.sharpenPreset] firstObject]];
+
+            if ([filters.sharpen isEqualToString:@"unsharp"])
+            {
+                [summary appendFormat:@", %@", [[[HBFilters sharpenTunesDict] allKeysForObject:filters.sharpenTune] firstObject]];
+            }
+            else if ([filters.sharpen isEqualToString:@"lapsharp"])
+            {
+                [summary appendFormat:@", %@", [[[HBFilters sharpenTunesDict] allKeysForObject:filters.sharpenTune] firstObject]];
+            }
+        }
+        else
+        {
+            [summary appendFormat:@", %@", filters.sharpenCustomString];
+        }
+
+        [summary appendString:@")"];
+
+    }
+
     // Grayscale
     if (filters.grayscale)
     {
@@ -335,7 +366,7 @@ static NSDictionary            *shortHeightAttr;
         [attrString appendString:summary        withAttributes:detailAttr];
         [attrString appendString:@"\n"          withAttributes:detailAttr];
     }
-    
+
     return attrString;
 }
 
@@ -344,7 +375,8 @@ static NSDictionary            *shortHeightAttr;
     NSMutableAttributedString *attrString = [[NSMutableAttributedString alloc] init];
     NSMutableString *videoInfo = [NSMutableString string];
 
-    [videoInfo appendFormat:@"Encoder: %@, ", @(hb_video_encoder_get_name(self.video.encoder))];
+    const char *encoderName = hb_video_encoder_get_name(self.video.encoder);
+    [videoInfo appendFormat:@"Encoder: %@, ", encoderName ? @(encoderName) : @"Unknown"];
 
     [videoInfo appendString:@"Framerate: "];
 

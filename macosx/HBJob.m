@@ -72,7 +72,10 @@ NSString *HBChaptersChangedNotification  = @"HBChaptersChangedNotification";
 
         _chapterTitles = [title.chapters copy];
 
-        _uuid = [[NSUUID UUID] UUIDString];
+        CFUUIDRef theUUID = CFUUIDCreate(NULL);
+        CFStringRef string = CFUUIDCreateString(NULL, theUUID);
+        CFRelease(theUUID);
+        _uuid = CFBridgingRelease(string);
 
         [self applyPreset:preset];
     }
@@ -95,6 +98,8 @@ NSString *HBChaptersChangedNotification  = @"HBChaptersChangedNotification";
     self.mp4HttpOptimize = [preset[@"Mp4HttpOptimize"] boolValue];
     self.mp4iPodCompatible = [preset[@"Mp4iPodCompatible"] boolValue];
 
+    self.alignAVStart = [preset[@"AlignAVStart"] boolValue];
+
     // Chapter Markers
     self.chaptersEnabled = [preset[@"ChapterMarkers"] boolValue];
 
@@ -114,6 +119,8 @@ NSString *HBChaptersChangedNotification  = @"HBChaptersChangedNotification";
     // MP4 specifics options.
     preset[@"Mp4HttpOptimize"] = @(self.mp4HttpOptimize);
     preset[@"Mp4iPodCompatible"] = @(self.mp4iPodCompatible);
+
+    preset[@"AlignAVStart"] = @(self.alignAVStart);
 
     [@[self.video, self.filters, self.picture, self.audio, self.subtitles] makeObjectsPerformSelector:@selector(writeToPreset:)
                                                                                                            withObject:preset];
@@ -205,6 +212,15 @@ NSString *HBChaptersChangedNotification  = @"HBChaptersChangedNotification";
     _mp4HttpOptimize = mp4HttpOptimize;
 }
 
+- (void)setAlignAVStart:(BOOL)alignAVStart
+{
+    if (alignAVStart != _alignAVStart)
+    {
+        [[self.undo prepareWithInvocationTarget:self] setAlignAVStart:_alignAVStart];
+    }
+    _alignAVStart = alignAVStart;
+}
+
 - (void)setMp4iPodCompatible:(BOOL)mp4iPodCompatible
 {
     if (mp4iPodCompatible != _mp4iPodCompatible)
@@ -271,7 +287,11 @@ NSString *HBChaptersChangedNotification  = @"HBChaptersChangedNotification";
         copy->_name = [_name copy];
         copy->_presetName = [_presetName copy];
         copy->_titleIdx = _titleIdx;
-        copy->_uuid = [[NSUUID UUID] UUIDString];
+
+        CFUUIDRef theUUID = CFUUIDCreate(NULL);
+        CFStringRef string = CFUUIDCreateString(NULL, theUUID);
+        CFRelease(theUUID);
+        copy->_uuid = CFBridgingRelease(string);
 
         copy->_fileURLBookmark = [_fileURLBookmark copy];
         copy->_outputURLFolderBookmark = [_outputURLFolderBookmark copy];
@@ -284,6 +304,7 @@ NSString *HBChaptersChangedNotification  = @"HBChaptersChangedNotification";
         copy->_angle = _angle;
         copy->_mp4HttpOptimize = _mp4HttpOptimize;
         copy->_mp4iPodCompatible = _mp4iPodCompatible;
+        copy->_alignAVStart = _alignAVStart;
 
         copy->_range = [_range copy];
         copy->_video = [_video copy];
@@ -350,6 +371,7 @@ NSString *HBChaptersChangedNotification  = @"HBChaptersChangedNotification";
     encodeInt(_angle);
     encodeBool(_mp4HttpOptimize);
     encodeBool(_mp4iPodCompatible);
+    encodeBool(_alignAVStart);
 
     encodeObject(_range);
     encodeObject(_video);
@@ -370,10 +392,10 @@ NSString *HBChaptersChangedNotification  = @"HBChaptersChangedNotification";
     if (version == 3 && (self = [super init]))
     {
         decodeInt(_state);
-        decodeObject(_name, NSString);
-        decodeObject(_presetName, NSString);
+        decodeObjectOrFail(_name, NSString);
+        decodeObjectOrFail(_presetName, NSString);
         decodeInt(_titleIdx);
-        decodeObject(_uuid, NSString);
+        decodeObjectOrFail(_uuid, NSString);
 
 #ifdef __SANDBOX_ENABLED__
         _fileURLBookmark = [HBCodingUtilities decodeObjectOfClass:[NSData class] forKey:@"_fileURLBookmark" decoder:decoder];
@@ -385,7 +407,7 @@ NSString *HBChaptersChangedNotification  = @"HBChaptersChangedNotification";
 
         if (!_fileURL)
         {
-            decodeObject(_fileURL, NSURL);
+            decodeObjectOrFail(_fileURL, NSURL);
         }
 
         _outputURLFolderBookmark = [HBCodingUtilities decodeObjectOfClass:[NSData class] forKey:@"_outputURLFolderBookmark" decoder:decoder];
@@ -399,7 +421,7 @@ NSString *HBChaptersChangedNotification  = @"HBChaptersChangedNotification";
             decodeObject(_outputURL, NSURL);
         }
 #else
-        decodeObject(_fileURL, NSURL);
+        decodeObjectOrFail(_fileURL, NSURL);
         decodeObject(_outputURL, NSURL);
 #endif
 
@@ -409,16 +431,17 @@ NSString *HBChaptersChangedNotification  = @"HBChaptersChangedNotification";
         decodeInt(_angle);
         decodeBool(_mp4HttpOptimize);
         decodeBool(_mp4iPodCompatible);
+        decodeBool(_alignAVStart);
 
-        decodeObject(_range, HBRange);
-        decodeObject(_video, HBVideo);
-        decodeObject(_picture, HBPicture);
-        decodeObject(_filters, HBFilters);
+        decodeObjectOrFail(_range, HBRange);
+        decodeObjectOrFail(_video, HBVideo);
+        decodeObjectOrFail(_picture, HBPicture);
+        decodeObjectOrFail(_filters, HBFilters);
 
         _video.job = self;
 
-        decodeObject(_audio, HBAudio);
-        decodeObject(_subtitles, HBSubtitles);
+        decodeObjectOrFail(_audio, HBAudio);
+        decodeObjectOrFail(_subtitles, HBSubtitles);
 
         _audio.job = self;
         _video.job = self;
@@ -429,6 +452,7 @@ NSString *HBChaptersChangedNotification  = @"HBChaptersChangedNotification";
         return self;
     }
 
+fail:
     return nil;
 }
 

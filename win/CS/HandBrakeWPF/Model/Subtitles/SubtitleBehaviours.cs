@@ -12,7 +12,7 @@ namespace HandBrakeWPF.Model.Subtitles
     using System.ComponentModel;
     using System.Linq;
 
-    using HandBrakeWPF.Utilities;
+    using Caliburn.Micro;
     using HandBrake.ApplicationServices.Interop.Model;
 
     /// <summary>

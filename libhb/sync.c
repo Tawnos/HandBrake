@@ -77,7 +77,6 @@ typedef struct
     hb_list_t         * scr_delay_queue;
     int                 max_len;
     int                 min_len;
-    hb_cond_t         * cond_full;
     hb_fifo_t         * fifo_in;
     hb_fifo_t         * fifo_out;
 
@@ -158,6 +157,7 @@ struct sync_common_s
 
     // point-to-point support
     int             start_found;
+    int64_t         pts_to_start;
     int64_t         start_pts;
     int64_t         stop_pts;
     int             wait_for_frame;
@@ -241,16 +241,6 @@ static int fillQueues( sync_common_t * common )
     return !wait || abort;
 }
 
-static void signalBuffer( sync_stream_t * stream )
-{
-    if (hb_list_count(stream->in_queue) <= stream->max_len ||
-        stream->done || stream->common->job->done ||
-        *stream->common->job->die)
-    {
-        hb_cond_signal(stream->cond_full);
-    }
-}
-
 static void scrSlip( sync_common_t * common, int64_t delta )
 {
     int ii;
@@ -294,17 +284,296 @@ static void shiftTS( sync_common_t * common, int64_t delta )
     }
 }
 
+static hb_buffer_t * CreateSilenceBuf( sync_stream_t * stream,
+                                       int64_t dur, int64_t pts )
+{
+    double             frame_dur, next_pts, duration;
+    int                size;
+    hb_buffer_list_t   list;
+    hb_buffer_t      * buf;
+
+    if (stream->audio.audio->config.out.codec & HB_ACODEC_PASS_FLAG)
+    {
+        return NULL;
+    }
+    duration = dur;
+    frame_dur = (90000. * stream->audio.audio->config.in.samples_per_frame) /
+                          stream->audio.audio->config.in.samplerate;
+    size = sizeof(float) * stream->audio.audio->config.in.samples_per_frame *
+           av_get_channel_layout_nb_channels(
+                          stream->audio.audio->config.in.channel_layout );
+
+    hb_buffer_list_clear(&list);
+    next_pts = pts;
+    while (duration >= frame_dur)
+    {
+        buf = hb_buffer_init(size);
+        memset(buf->data, 0, buf->size);
+        buf->s.start     = next_pts;
+        next_pts        += frame_dur;
+        buf->s.stop      = next_pts;
+        buf->s.duration  = frame_dur;
+        duration        -= frame_dur;
+        hb_buffer_list_append(&list, buf);
+    }
+    if (duration > 0)
+    {
+        // Make certain size is even multiple of sample size * num channels
+        size = (int)(duration * stream->audio.audio->config.in.samplerate /
+                     90000) * sizeof(float) *
+               av_get_channel_layout_nb_channels(
+                              stream->audio.audio->config.in.channel_layout);
+        if (size > 0)
+        {
+            buf = hb_buffer_init(size);
+            memset(buf->data, 0, buf->size);
+            buf->s.start     = next_pts;
+            next_pts        += duration;
+            buf->s.stop      = next_pts;
+            buf->s.duration  = duration;
+            hb_buffer_list_append(&list, buf);
+        }
+    }
+    return hb_buffer_list_clear(&list);
+}
+
+static hb_buffer_t * CreateBlackBuf( sync_stream_t * stream,
+                                     int64_t dur, int64_t pts )
+{
+    // I would like to just allocate one black frame here and give
+    // it the full duration.  But encoders that use B-Frames compute
+    // the dts delay based on the pts of the 2nd or 3rd frame which
+    // can be a very large value in this case.  This large dts delay
+    // causes problems with computing the dts of the frames (which is
+    // extrapolated from the pts and the computed dts delay). And the
+    // dts problems lead to problems with frame duration.
+    double             frame_dur, next_pts, duration;
+    hb_buffer_list_t   list;
+    hb_buffer_t      * buf = NULL;
+
+    hb_buffer_list_clear(&list);
+    duration = dur;
+    next_pts = pts;
+
+    frame_dur = 90000. * stream->common->job->title->vrate.den /
+                         stream->common->job->title->vrate.num;
+
+    // Only create black buffers of frame_dur or longer
+    while (duration >= frame_dur)
+    {
+        if (buf == NULL)
+        {
+            buf = hb_frame_buffer_init(AV_PIX_FMT_YUV420P,
+                                   stream->common->job->title->geometry.width,
+                                   stream->common->job->title->geometry.height);
+            memset(buf->plane[0].data, 0x00, buf->plane[0].size);
+            memset(buf->plane[1].data, 0x80, buf->plane[1].size);
+            memset(buf->plane[2].data, 0x80, buf->plane[2].size);
+        }
+        else
+        {
+            buf = hb_buffer_dup(buf);
+        }
+        buf->s.start     = next_pts;
+        next_pts        += frame_dur;
+        buf->s.stop      = next_pts;
+        buf->s.duration  = frame_dur;
+        duration        -= frame_dur;
+        hb_buffer_list_append(&list, buf);
+    }
+    if (buf != NULL)
+    {
+        if (buf->s.stop < pts + dur)
+        {
+            // Extend the duration of the last black buffer to fill
+            // the remaining gap.
+            buf->s.duration += pts + dur - buf->s.stop;
+            buf->s.stop = pts + dur;
+        }
+    }
+
+    return hb_buffer_list_clear(&list);
+}
+
+static void setNextPts( sync_common_t * common )
+{
+    int ii;
+
+    for (ii = 0; ii < common->stream_count; ii++)
+    {
+        sync_stream_t * stream = &common->streams[ii];
+        hb_buffer_t   * buf = hb_list_item(stream->in_queue, 0);
+        if (buf != NULL)
+        {
+            stream->next_pts = buf->s.start;
+        }
+        else
+        {
+            stream->next_pts = (int64_t)AV_NOPTS_VALUE;
+        }
+    }
+}
+
+static void alignStream( sync_common_t * common, sync_stream_t * stream,
+                         int64_t pts )
+{
+    if (hb_list_count(stream->in_queue) <= 0 ||
+        stream->type == SYNC_TYPE_SUBTITLE)
+    {
+        return;
+    }
+
+    hb_buffer_t * buf = hb_list_item(stream->in_queue, 0);
+    int64_t gap = buf->s.start - pts;
+
+    if (gap == 0)
+    {
+        return;
+    }
+    if (gap < 0)
+    {
+        int ii;
+
+        // Drop frames from other streams
+        for (ii = 0; ii < common->stream_count; ii++)
+        {
+            sync_stream_t * other_stream = &common->streams[ii];
+            if (stream == other_stream)
+            {
+                continue;
+            }
+            while (hb_list_count(other_stream->in_queue) > 0)
+            {
+                buf = hb_list_item(other_stream->in_queue, 0);
+                if (buf->s.start < pts)
+                {
+                    hb_list_rem(other_stream->in_queue, buf);
+                    hb_buffer_close(&buf);
+                }
+                else
+                {
+                    // Fill the partial frame gap left after dropping frames
+                    alignStream(common, other_stream, pts);
+                    break;
+                }
+            }
+        }
+    }
+    else
+    {
+        hb_buffer_t * blank_buf = NULL;
+
+        // Insert a blank frame to fill the gap
+        if (stream->type == SYNC_TYPE_AUDIO)
+        {
+            // Can't add silence padding to passthru streams
+            if (!(stream->audio.audio->config.out.codec & HB_ACODEC_PASS_FLAG))
+            {
+                blank_buf = CreateSilenceBuf(stream, gap, pts);
+            }
+        }
+        else if (stream->type == SYNC_TYPE_VIDEO)
+        {
+            blank_buf = CreateBlackBuf(stream, gap, pts);
+        }
+
+        int64_t last_stop = pts;
+        hb_buffer_t * next;
+        int           pos;
+        for (pos = 0; blank_buf != NULL; blank_buf = next, pos++)
+        {
+            last_stop = blank_buf->s.stop;
+            next = blank_buf->next;
+            blank_buf->next = NULL;
+            hb_list_insert(stream->in_queue, pos, blank_buf);
+        }
+        if (stream->type == SYNC_TYPE_VIDEO && last_stop < buf->s.start)
+        {
+            // Extend the duration of the first frame to fill the remaining gap.
+            buf->s.duration += buf->s.start - last_stop;
+            buf->s.start = last_stop;
+        }
+    }
+}
+
+static void alignStreams( sync_common_t * common, int64_t pts )
+{
+    int           ii;
+    hb_buffer_t * buf;
+
+    if (common->job->align_av_start)
+    {
+        int64_t first_pts = AV_NOPTS_VALUE;
+        int     audio_passthru = 0;
+
+        for (ii = 0; ii < common->stream_count; ii++)
+        {
+            sync_stream_t * stream = &common->streams[ii];
+
+            buf = hb_list_item(stream->in_queue, 0);
+
+            // P-to-P encoding will pass the start point in pts.
+            // Drop any buffers that are before the start point.
+            while (buf != NULL && buf->s.start < pts)
+            {
+                hb_list_rem(stream->in_queue, buf);
+                hb_buffer_close(&buf);
+                buf = hb_list_item(stream->in_queue, 0);
+            }
+            if (buf == NULL)
+            {
+                continue;
+            }
+            if (stream->type == SYNC_TYPE_AUDIO &&
+                stream->audio.audio->config.out.codec & HB_ACODEC_PASS_FLAG)
+            {
+                // Find the largest initial pts of all passthru audio streams.
+                // We can not add silence to passthru audio streams.
+                // To align with a passthru audio stream, we must drop
+                // buffers from all other streams that are before
+                // the first buffer in the passthru audio stream.
+                audio_passthru = 1;
+                if (first_pts < buf->s.start)
+                {
+                    first_pts = buf->s.start;
+                }
+            }
+            else if (!audio_passthru)
+            {
+                // Find the smallest initial pts of all streams when
+                // there is *no* passthru audio.
+                // When there is no passthru audio stream, we insert
+                // silence or black buffers to fill any gaps between
+                // the start of any stream and the start of the stream
+                // with the smallest pts.
+                if (first_pts == AV_NOPTS_VALUE || first_pts > buf->s.start)
+                {
+                    first_pts = buf->s.start;
+                }
+            }
+        }
+        if (first_pts != AV_NOPTS_VALUE)
+        {
+            for (ii = 0; ii < common->stream_count; ii++)
+            {
+                // Fill the gap (or drop frames for passthru audio)
+                alignStream(common, &common->streams[ii], first_pts);
+            }
+        }
+    }
+}
+
 static void computeInitialTS( sync_common_t * common,
                               sync_stream_t * first_stream )
 {
     int           ii;
-    hb_buffer_t * prev;
+    hb_buffer_t * prev, * buf;
 
     // Process first_stream first since it has the initial PTS
     prev = NULL;
     for (ii = 0; ii < hb_list_count(first_stream->in_queue);)
     {
-        hb_buffer_t * buf = hb_list_item(first_stream->in_queue, ii);
+        buf = hb_list_item(first_stream->in_queue, ii);
 
         if (!UpdateSCR(first_stream, buf))
         {
@@ -325,6 +594,7 @@ static void computeInitialTS( sync_common_t * common,
             prev = buf;
         }
     }
+
     for (ii = 0; ii < common->stream_count; ii++)
     {
         sync_stream_t * stream = &common->streams[ii];
@@ -339,7 +609,7 @@ static void computeInitialTS( sync_common_t * common,
         prev = NULL;
         for (jj = 0; jj < hb_list_count(stream->in_queue);)
         {
-            hb_buffer_t * buf = hb_list_item(stream->in_queue, jj);
+            buf = hb_list_item(stream->in_queue, jj);
             if (!UpdateSCR(stream, buf))
             {
                 // Subtitle put into delay queue, remove it from in_queue
@@ -361,6 +631,7 @@ static void computeInitialTS( sync_common_t * common,
             }
         }
     }
+    alignStreams(common, AV_NOPTS_VALUE);
 }
 
 static void checkFirstPts( sync_common_t * common )
@@ -379,13 +650,23 @@ static void checkFirstPts( sync_common_t * common )
         }
 
         // If buffers are queued, find the lowest initial PTS
-        if (hb_list_count(stream->in_queue) > 0)
+        while (hb_list_count(stream->in_queue) > 0)
         {
             hb_buffer_t * buf = hb_list_item(stream->in_queue, 0);
-            if (buf->s.start != AV_NOPTS_VALUE && buf->s.start < first_pts)
+            if (buf->s.start != AV_NOPTS_VALUE)
             {
-                first_pts = buf->s.start;
-                first_stream = stream;
+                // We require an initial pts for every stream
+                if (buf->s.start < first_pts)
+                {
+                    first_pts = buf->s.start;
+                    first_stream = stream;
+                }
+                break;
+            }
+            else
+            {
+                hb_list_rem(stream->in_queue, buf);
+                hb_buffer_close(&buf);
             }
         }
     }
@@ -604,7 +885,6 @@ static void fixVideoOverlap( sync_stream_t * stream )
                 stream->drop_pts = buf->s.start;
             }
             hb_list_rem(stream->in_queue, buf);
-            signalBuffer(stream);
             // Video frame durations are assumed to be variable and are
             // adjusted based on the start time of the next frame before
             // we get to this point.
@@ -706,56 +986,6 @@ static void dejitterAudio( sync_stream_t * stream )
     }
 }
 
-static hb_buffer_t * CreateSilenceBuf( sync_stream_t * stream, int64_t dur )
-{
-    double             frame_dur, next_pts;
-    int                size;
-    hb_buffer_list_t   list;
-    hb_buffer_t      * buf;
-
-    if (stream->audio.audio->config.out.codec & HB_ACODEC_PASS_FLAG)
-    {
-        return NULL;
-    }
-    frame_dur = (90000. * stream->audio.audio->config.out.samples_per_frame) /
-                          stream->audio.audio->config.in.samplerate;
-    size = sizeof(float) * stream->audio.audio->config.out.samples_per_frame *
-           hb_mixdown_get_discrete_channel_count(
-                          stream->audio.audio->config.out.mixdown );
-
-    hb_buffer_list_clear(&list);
-    next_pts = stream->next_pts;
-    while (dur >= frame_dur)
-    {
-        buf = hb_buffer_init(size);
-        memset(buf->data, 0, buf->size);
-        buf->s.start     = next_pts;
-        buf->s.duration  = frame_dur;
-        next_pts        += frame_dur;
-        buf->s.stop      = next_pts;
-        dur             -= frame_dur;
-        hb_buffer_list_append(&list, buf);
-    }
-    if (dur > 0)
-    {
-        size = sizeof(float) *
-               (dur * stream->audio.audio->config.in.samplerate / 90000) *
-               hb_mixdown_get_discrete_channel_count(
-                      stream->audio.audio->config.out.mixdown );
-        if (size > 0)
-        {
-            buf = hb_buffer_init(size);
-            memset(buf->data, 0, buf->size);
-            buf->s.start     = next_pts;
-            buf->s.duration  = frame_dur;
-            next_pts        += frame_dur;
-            buf->s.stop      = next_pts;
-            hb_buffer_list_append(&list, buf);
-        }
-    }
-    return hb_buffer_list_clear(&list);
-}
-
 // Fix audio gaps that could not be corrected with dejitter
 static void fixAudioGap( sync_stream_t * stream )
 {
@@ -779,7 +1009,7 @@ static void fixAudioGap( sync_stream_t * stream )
         {
             stream->gap_pts = buf->s.start;
         }
-        buf = CreateSilenceBuf(stream, gap);
+        buf = CreateSilenceBuf(stream, gap, stream->next_pts);
         if (buf != NULL)
         {
             hb_buffer_t * next;
@@ -848,7 +1078,6 @@ static void fixAudioOverlap( sync_stream_t * stream )
             // by just shifting the timestamps and carrying the gap
             // along.
             hb_list_rem(stream->in_queue, buf);
-            signalBuffer(stream);
             stream->drop_duration += buf->s.duration;
             stream->drop++;
             drop++;
@@ -931,8 +1160,6 @@ static void fifo_push( hb_fifo_t * fifo, hb_buffer_t * buf )
 
 static void streamFlush( sync_stream_t * stream )
 {
-    hb_lock(stream->common->mutex);
-
     while (hb_list_count(stream->in_queue) > 0)
     {
         hb_buffer_t * buf;
@@ -955,7 +1182,6 @@ static void streamFlush( sync_stream_t * stream )
         if (buf != NULL)
         {
             hb_list_rem(stream->in_queue, buf);
-            signalBuffer(stream);
             if (!stream->first_frame)
             {
                 if (buf->s.start >= 0)
@@ -1060,8 +1286,6 @@ static void streamFlush( sync_stream_t * stream )
         }
     }
     fifo_push(stream->fifo_out, hb_buffer_eof_init());
-
-    hb_unlock(stream->common->mutex);
 }
 
 static void flushStreams( sync_common_t * common )
@@ -1088,6 +1312,13 @@ static void flushStreams( sync_common_t * common )
         }
         streamFlush(stream);
     }
+}
+
+static void flushStreamsLock( sync_common_t * common )
+{
+    hb_lock(common->mutex);
+    flushStreams(common);
+    hb_unlock(common->mutex);
 }
 
 static void log_chapter( sync_common_t *common, int chap_num,
@@ -1239,7 +1470,6 @@ static void terminateSubtitleStreams( sync_common_t * common )
         fifo_push(stream->fifo_out, hb_buffer_eof_init());
         fifo_push(stream->fifo_in,  hb_buffer_eof_init());
         stream->done = 1;
-        signalBuffer(stream);
     }
 }
 
@@ -1309,7 +1539,6 @@ static void OutputBuffer( sync_common_t * common )
         {
             buf = hb_list_item(out_stream->in_queue, 0);
             hb_list_rem(out_stream->in_queue, buf);
-            signalBuffer(out_stream);
             hb_buffer_close(&buf);
             continue;
         }
@@ -1350,7 +1579,7 @@ static void OutputBuffer( sync_common_t * common )
             else if (common->wait_for_pts &&
                      out_stream->type != SYNC_TYPE_SUBTITLE)
             {
-                if (buf->s.start >= common->job->pts_to_start)
+                if (buf->s.start >= common->pts_to_start)
                 {
                     common->start_found = 1;
                     common->streams[0].frame_count = 0;
@@ -1366,16 +1595,27 @@ static void OutputBuffer( sync_common_t * common )
                 }
                 if (buf->s.start < common->start_pts)
                 {
+                    out_stream->next_pts = buf->s.start + buf->s.duration;
                     hb_list_rem(out_stream->in_queue, buf);
                     hb_buffer_close(&buf);
                 }
-                signalBuffer(out_stream);
                 continue;
             }
             // reset frame count to track number of frames after
             // the start position till the end of encode.
             out_stream->frame_count = 0;
+
             shiftTS(common, buf->s.start);
+            alignStreams(common, buf->s.start);
+            setNextPts(common);
+
+            buf = hb_list_item(out_stream->in_queue, 0);
+            if (buf == NULL)
+            {
+                // In case aligning timestamps causes all buffers in
+                // out_stream to be deleted...
+                continue;
+            }
         }
 
         // If pts_to_stop or frame_to_stop were specified, stop output
@@ -1404,7 +1644,7 @@ static void OutputBuffer( sync_common_t * common )
             out_stream->done = 1;
             fifo_push(out_stream->fifo_out, hb_buffer_eof_init());
             terminateSubtitleStreams(common);
-            signalBuffer(out_stream);
+            flushStreams(common);
             continue;
         }
         if (out_stream->type == SYNC_TYPE_VIDEO &&
@@ -1417,7 +1657,7 @@ static void OutputBuffer( sync_common_t * common )
             out_stream->done = 1;
             fifo_push(out_stream->fifo_out, hb_buffer_eof_init());
             terminateSubtitleStreams(common);
-            signalBuffer(out_stream);
+            flushStreams(common);
             continue;
         }
 
@@ -1428,7 +1668,6 @@ static void OutputBuffer( sync_common_t * common )
 
         // Out the buffer goes...
         hb_list_rem(out_stream->in_queue, buf);
-        signalBuffer(out_stream);
         if (out_stream->type == SYNC_TYPE_VIDEO)
         {
             UpdateState(common, out_stream->frame_count);
@@ -1869,15 +2108,25 @@ static void QueueBuffer( sync_stream_t * stream, hb_buffer_t * buf )
            !stream->done && !stream->common->job->done &&
            !*stream->common->job->die)
     {
-        if (!stream->common->start_found)
+        // If the in_queue is full, we have to force some output to
+        // unblock it.  Blocking here would back up the pipeline and
+        // stall out reader eventually.
+        hb_unlock(stream->common->mutex);
+        Synchronize(stream);
+        hb_lock(stream->common->mutex);
+    }
+
+    // Reader can change job->reader_pts_offset after initialization
+    // and before we receive the first buffer here.  Calculate
+    // common->pts_to_start here since this is the first opportunity where
+    // all the necessary information exists.
+    if (stream->common->pts_to_start == AV_NOPTS_VALUE)
+    {
+        hb_job_t * job = stream->common->job;
+        if (job->pts_to_start > 0)
         {
-            hb_unlock(stream->common->mutex);
-            Synchronize(stream);
-            hb_lock(stream->common->mutex);
-        }
-        else
-        {
-            hb_cond_wait(stream->cond_full, stream->common->mutex);
+            stream->common->pts_to_start =
+                MAX(0, job->pts_to_start - job->reader_pts_offset);
         }
     }
 
@@ -1960,8 +2209,6 @@ static int InitAudio( sync_common_t * common, int index )
     pv->common                  = common;
     pv->stream                  = &common->streams[1 + index];
     pv->stream->common          = common;
-    pv->stream->cond_full       = hb_cond_init();
-    if (pv->stream->cond_full == NULL) goto fail;
     pv->stream->in_queue        = hb_list_init();
     pv->stream->scr_delay_queue = hb_list_init();
     pv->stream->max_len         = SYNC_MAX_AUDIO_QUEUE_LEN;
@@ -2008,7 +2255,6 @@ fail:
             }
             hb_list_close(&pv->stream->delta_list);
             hb_list_close(&pv->stream->in_queue);
-            hb_cond_close(&pv->stream->cond_full);
         }
     }
     free(pv);
@@ -2036,8 +2282,6 @@ static int InitSubtitle( sync_common_t * common, int index )
     pv->stream  =
         &common->streams[1 + hb_list_count(common->job->list_audio) + index];
     pv->stream->common            = common;
-    pv->stream->cond_full         = hb_cond_init();
-    if (pv->stream->cond_full == NULL) goto fail;
     pv->stream->in_queue          = hb_list_init();
     pv->stream->scr_delay_queue   = hb_list_init();
     pv->stream->max_len           = SYNC_MAX_SUBTITLE_QUEUE_LEN;
@@ -2092,7 +2336,6 @@ fail:
         {
             hb_list_close(&pv->stream->delta_list);
             hb_list_close(&pv->stream->in_queue);
-            hb_cond_close(&pv->stream->cond_full);
         }
     }
     free(pv);
@@ -2137,8 +2380,6 @@ static int syncVideoInit( hb_work_object_t * w, hb_job_t * job)
     // Set up video sync work object
     pv->stream                  = &pv->common->streams[0];
     pv->stream->common          = pv->common;
-    pv->stream->cond_full       = hb_cond_init();
-    if (pv->stream->cond_full == NULL) goto fail;
     pv->stream->in_queue        = hb_list_init();
     pv->stream->scr_delay_queue = hb_list_init();
     pv->stream->max_len         = SYNC_MAX_VIDEO_QUEUE_LEN;
@@ -2242,10 +2483,14 @@ static int syncVideoInit( hb_work_object_t * w, hb_job_t * job)
 
     if (job->frame_to_start || job->pts_to_start)
     {
-        pv->common->start_found = 0;
-        pv->common->start_pts = pv->common->job->pts_to_start;
+        pv->common->start_found    = 0;
+        pv->common->start_pts      = job->pts_to_start;
         pv->common->wait_for_frame = !!job->frame_to_start;
         pv->common->wait_for_pts   = !!job->pts_to_start;
+        if (job->pts_to_start)
+        {
+            pv->common->pts_to_start = AV_NOPTS_VALUE;
+        }
     }
     else
     {
@@ -2275,7 +2520,6 @@ fail:
             {
                 hb_list_close(&pv->stream->delta_list);
                 hb_list_close(&pv->stream->in_queue);
-                hb_cond_close(&pv->stream->cond_full);
             }
             free(pv->common->streams);
             free(pv->common);
@@ -2332,7 +2576,6 @@ static void syncVideoClose( hb_work_object_t * w )
     hb_list_close(&pv->stream->delta_list);
     hb_list_empty(&pv->stream->in_queue);
     hb_list_empty(&pv->stream->scr_delay_queue);
-    hb_cond_close(&pv->stream->cond_full);
 
     // Close work threads
     hb_work_object_t * work;
@@ -2726,7 +2969,7 @@ static int syncVideoWork( hb_work_object_t * w, hb_buffer_t ** buf_in,
     if (in->s.flags & HB_BUF_FLAG_EOF)
     {
         pv->stream->flush = 1;
-        flushStreams(pv->common);
+        flushStreamsLock(pv->common);
         // Ideally, we would only do this subtitle scan check in
         // syncSubtitleWork, but someone might try to do a subtitle
         // scan on a source that has no subtitles :-(
@@ -2789,7 +3032,6 @@ static void syncAudioClose( hb_work_object_t * w )
     hb_list_close(&pv->stream->delta_list);
     hb_list_empty(&pv->stream->in_queue);
     hb_list_empty(&pv->stream->scr_delay_queue);
-    hb_cond_close(&pv->stream->cond_full);
     free(pv);
     w->private_data = NULL;
 }
@@ -2818,7 +3060,7 @@ static int syncAudioWork( hb_work_object_t * w, hb_buffer_t ** buf_in,
     if (in->s.flags & HB_BUF_FLAG_EOF)
     {
         pv->stream->flush = 1;
-        flushStreams(pv->common);
+        flushStreamsLock(pv->common);
         return HB_WORK_DONE;
     }
 
@@ -3048,7 +3290,7 @@ static void UpdateSearchState( sync_common_t * common, int64_t start,
     if (common->wait_for_frame)
         p.progress  = (float)frame_count / job->frame_to_start;
     else if (common->wait_for_pts)
-        p.progress  = (float) start / job->pts_to_start;
+        p.progress  = (float) start / common->pts_to_start;
     else
         p.progress = 0;
     if (p.progress > 1.0)
@@ -3067,7 +3309,7 @@ static void UpdateSearchState( sync_common_t * common, int64_t start,
         else if (common->wait_for_pts)
         {
             avg = 1000.0 * start / (now - common->st_first);
-            eta = (job->pts_to_start - start) / avg;
+            eta = (common->pts_to_start - start) / avg;
         }
         p.hours   = eta / 3600;
         p.minutes = (eta % 3600) / 60;
@@ -3108,7 +3350,6 @@ static void syncSubtitleClose( hb_work_object_t * w )
     hb_list_close(&pv->stream->delta_list);
     hb_list_empty(&pv->stream->in_queue);
     hb_list_empty(&pv->stream->scr_delay_queue);
-    hb_cond_close(&pv->stream->cond_full);
     hb_buffer_list_close(&pv->stream->subtitle.sanitizer.list_current);
     free(pv);
     w->private_data = NULL;
@@ -3131,7 +3372,7 @@ static int syncSubtitleWork( hb_work_object_t * w, hb_buffer_t ** buf_in,
         // sanitizeSubtitle requires EOF buffer to recognize that
         // it needs to flush all subtitles.
         hb_list_add(pv->stream->in_queue, hb_buffer_eof_init());
-        flushStreams(pv->common);
+        flushStreamsLock(pv->common);
         if (pv->common->job->indepth_scan)
         {
             // When doing subtitle indepth scan, the pipeline ends at sync.

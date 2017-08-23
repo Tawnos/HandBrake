@@ -146,14 +146,6 @@ struct hb_buffer_s
     } qsv_details;
 #endif
 
-    /* OpenCL */
-    struct cl_data
-    {
-        cl_mem buffer;
-        cl_event last_event;
-        enum { HOST, DEVICE } buffer_location;
-    } cl;
-
     // libav may attach AV_PKT_DATA_PALETTE side data to some AVPackets
     // Store this data here when read and pass to decoder.
     hb_buffer_t * palette;
@@ -465,7 +457,10 @@ extern hb_filter_object_t hb_filter_crop_scale;
 extern hb_filter_object_t hb_filter_rotate;
 extern hb_filter_object_t hb_filter_grayscale;
 extern hb_filter_object_t hb_filter_pad;
+extern hb_filter_object_t hb_filter_lapsharp;
+extern hb_filter_object_t hb_filter_unsharp;
 extern hb_filter_object_t hb_filter_avfilter;
+extern hb_filter_object_t hb_filter_mt_frame;
 
 #ifdef USE_QSV
 extern hb_filter_object_t hb_filter_qsv;

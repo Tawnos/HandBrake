@@ -1584,7 +1584,7 @@ static int setup_extradata( hb_work_object_t *w, hb_buffer_t *in )
             {
                 pv->context->extradata_size = size;
                 pv->context->extradata =
-                                av_malloc(size + FF_INPUT_BUFFER_PADDING_SIZE);
+                                av_malloc(size + AV_INPUT_BUFFER_PADDING_SIZE);
                 if (pv->context->extradata == NULL)
                     return 1;
                 memcpy(pv->context->extradata, in->data, size);
@@ -1987,6 +1987,13 @@ static void decodeAudio(hb_work_private_t *pv, packet_info_t * packet_info)
     AVPacket         avp;
     int              ret;
 
+    // libav does not supply timestamps for wmapro audio (possibly others)
+    // if there is an input timestamp, initialize next_pts
+    if (pv->next_pts     == (int64_t)AV_NOPTS_VALUE &&
+        packet_info->pts !=          AV_NOPTS_VALUE)
+    {
+        pv->next_pts = packet_info->pts;
+    }
     av_init_packet(&avp);
     if (packet_info != NULL)
     {

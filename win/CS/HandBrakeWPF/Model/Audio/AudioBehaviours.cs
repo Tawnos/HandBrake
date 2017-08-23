@@ -12,7 +12,7 @@ namespace HandBrakeWPF.Model.Audio
     using System.ComponentModel;
     using System.Linq;
 
-    using HandBrakeWPF.Utilities;
+    using Caliburn.Micro;
     using HandBrake.ApplicationServices.Interop.Model;
 
     /// <summary>
@@ -30,7 +30,7 @@ namespace HandBrakeWPF.Model.Audio
         public AudioBehaviours()
         {
             this.SelectedBehaviour = AudioBehaviourModes.None;
-            this.SelectedTrackDefaultBehaviour = AudioTrackDefaultsMode.None;
+            this.SelectedTrackDefaultBehaviour = AudioTrackDefaultsMode.FirstTrack;
             this.SelectedLanguages = new BindingList<Language>();
             this.BehaviourTracks = new BindingList<AudioBehaviourTrack>();
         }

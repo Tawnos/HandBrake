@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0710"
+   LastUpgradeVersion = "0900"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -98,15 +98,16 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "273F1FFE14ADAE950021BE6D"
-            BuildableName = "HandBrakeCLI"
-            BlueprintName = "HandBrakeCLI"
+            BlueprintIdentifier = "273F203814ADBC200021BE6D"
+            BuildableName = "HandBrake.app"
+            BlueprintName = "HandBrake"
             ReferencedContainer = "container:HandBrake.xcodeproj">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "debug-sandbox">

@@ -795,6 +795,14 @@ const gchar *MyCSS =
     color: @white;                  \n\
 }                                   \n\
 "
+#if GTK_CHECK_VERSION(3, 20, 0)
+"                                   \n\
+stackswitcher button.text-button    \n\
+{                                   \n\
+    min-width: 50px;                \n\
+}                                   \n\
+"
+#endif
 #if GTK_CHECK_VERSION(3, 16, 0)
 "                                   \n\
                                     \n\

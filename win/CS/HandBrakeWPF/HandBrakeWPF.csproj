@@ -8,7 +8,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>HandBrakeWPF</RootNamespace>
     <AssemblyName>HandBrake</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -155,8 +155,11 @@
     <Compile Include="Converters\Audio\AudioTrackDefaultBehaviourConverter.cs" />
     <Compile Include="Converters\Audio\AudioBehaviourConverter.cs" />
     <Compile Include="Converters\Filters\DenoisePresetConverter.cs" />
+    <Compile Include="Converters\Filters\SharpenTuneConverter.cs" />
+    <Compile Include="Converters\Filters\SharpenPresetConverter.cs" />
     <Compile Include="Converters\Options\FileSizeConverter.cs" />
     <Compile Include="Converters\Options\LogLevelConverter.cs" />
+    <Compile Include="Converters\OptionTabConverter.cs" />
     <Compile Include="Converters\PresetsMenuConverter.cs" />
     <Compile Include="Converters\Queue\PictureSettingsDescConveter.cs" />
     <Compile Include="Converters\Subtitles\SubtitleBurnInBehaviourConverter.cs" />
@@ -178,6 +181,8 @@
     <Compile Include="Model\Audio\AudioBehaviourModes.cs" />
     <Compile Include="Model\Audio\AudioBehaviours.cs" />
     <Compile Include="Model\DriveInformation.cs" />
+    <Compile Include="Model\Filters\FilterTune.cs" />
+    <Compile Include="Model\Filters\FilterPreset.cs" />
     <Compile Include="Model\Picture\PresetPictureSettingsMode.cs" />
     <Compile Include="Model\Subtitles\SubtitleBurnInBehaviourModes.cs" />
     <Compile Include="Model\Subtitles\SubtitleBehaviourModes.cs" />
@@ -255,7 +260,6 @@
     <Compile Include="Utilities\DPIAwareness.cs" />
     <Compile Include="Utilities\DriveUtilities.cs" />
     <Compile Include="Utilities\EnumHelper.cs" />
-    <Compile Include="Utilities\Execute.cs" />
     <Compile Include="Utilities\ExtensionMethods.cs" />
     <Compile Include="Utilities\GeneralUtilities.cs" />
     <Compile Include="Utilities\HandBrakeApp.cs" />
@@ -265,9 +269,9 @@
     <Compile Include="Utilities\Interfaces\INotifyPropertyChangedEx.cs" />
     <Compile Include="Utilities\Output\CsvHelper.cs" />
     <Compile Include="Utilities\Portable.cs" />
-    <Compile Include="Utilities\PropertyChangedBase.cs" />
     <Compile Include="Utilities\DirectoryUtilities.cs" />
     <Compile Include="Utilities\SystemInfo.cs" />
+    <Compile Include="Utilities\UwpDetect.cs" />
     <Compile Include="Utilities\Win32.cs" />
     <Compile Include="Utilities\Win7.cs" />
     <Compile Include="ViewModels\Interfaces\IManagePresetViewModel.cs" />

@@ -16,6 +16,8 @@ namespace HandBrake.ApplicationServices.Interop.Json.Presets
     /// </summary>
     public class HBPreset
     {
+        public bool AlignAVStart { get; set; }
+
         /// <summary>
         /// Gets or sets the audio copy mask.
         /// </summary>
@@ -166,6 +168,11 @@ namespace HandBrake.ApplicationServices.Interop.Json.Presets
         /// </summary>
         public string PictureDenoiseTune { get; set; }
 
+        public string PictureSharpenCustom { get; set; }
+        public string PictureSharpenFilter { get; set; }
+        public string PictureSharpenPreset { get; set; }
+        public string PictureSharpenTune { get; set; }
+
         /// <summary>
         /// Gets or sets the picture detelecine.
         /// </summary>
@@ -304,7 +311,7 @@ namespace HandBrake.ApplicationServices.Interop.Json.Presets
         /// <summary>
         /// Gets or sets the video avg bitrate.
         /// </summary>
-        public int VideoAvgBitrate { get; set; }
+        public int? VideoAvgBitrate { get; set; }
 
         /// <summary>
         /// Gets or sets the video color matrix code.

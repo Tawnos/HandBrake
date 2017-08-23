@@ -24,6 +24,8 @@ struct hb_work_private_s
     hb_list_t      * list;
 
     AVAudioResampleContext *avresample;
+
+    int64_t          last_pts;
 };
 
 static int  encavcodecaInit( hb_work_object_t *, hb_job_t * );
@@ -49,6 +51,7 @@ static int encavcodecaInit(hb_work_object_t *w, hb_job_t *job)
     w->private_data       = pv;
     pv->job               = job;
     pv->list              = hb_list_init();
+    pv->last_pts          = AV_NOPTS_VALUE;
 
     // channel count, layout and matrix encoding
     int matrix_encoding;
@@ -175,12 +178,12 @@ static int encavcodecaInit(hb_work_object_t *w, hb_job_t *job)
     else if (audio->config.out.quality >= 0)
     {
         context->global_quality = audio->config.out.quality * FF_QP2LAMBDA;
-        context->flags |= CODEC_FLAG_QSCALE;
+        context->flags |= AV_CODEC_FLAG_QSCALE;
         if (audio->config.out.codec == HB_ACODEC_FDK_AAC ||
             audio->config.out.codec == HB_ACODEC_FDK_HAAC)
         {
-            char vbr[2];
-            snprintf(vbr, 2, "%.1g", audio->config.out.quality);
+            char vbr[8];
+            snprintf(vbr, 8, "%.1g", audio->config.out.quality);
             av_dict_set(&av_opts, "vbr", vbr, 0);
         }
     }
@@ -194,7 +197,7 @@ static int encavcodecaInit(hb_work_object_t *w, hb_job_t *job)
     // so that it fills extradata with global header information.
     // If this flag is not set, it inserts the data into each
     // packet instead.
-    context->flags |= CODEC_FLAG_GLOBAL_HEADER;
+    context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
     if (hb_avcodec_open(context, codec, &av_opts, 0))
     {
@@ -220,7 +223,7 @@ static int encavcodecaInit(hb_work_object_t *w, hb_job_t *job)
     pv->input_buf         = malloc(pv->input_samples * sizeof(float));
     // Some encoders in libav (e.g. fdk-aac) fail if the output buffer
     // size is not some minumum value.  8K seems to be enough :(
-    pv->max_output_bytes  = MAX(FF_MIN_BUFFER_SIZE,
+    pv->max_output_bytes  = MAX(AV_INPUT_BUFFER_MIN_SIZE,
                                 (pv->input_samples *
                                  av_get_bytes_per_sample(context->sample_fmt)));
 
@@ -363,17 +366,26 @@ static void get_packets( hb_work_object_t * w, hb_buffer_list_t * list )
         out = hb_buffer_init(pkt.size);
         memcpy(out->data, pkt.data, out->size);
 
-        // The output pts from libav is in context->time_base. Convert it
-        // back to our timebase.
-        out->s.start = av_rescale_q(pkt.pts, pv->context->time_base,
-                                    (AVRational){1, 90000});
-        out->s.duration  = (double)90000 * pv->samples_per_frame /
-                                           audio->config.out.samplerate;
-        out->s.stop      = out->s.start + out->s.duration;
-        out->s.type      = AUDIO_BUF;
-        out->s.frametype = HB_FRAME_AUDIO;
+        // FIXME: On windows builds, there is an upstream bug in the lame
+        // encoder that causes an extra output packet that has the same
+        // timestamp as the second to last packet.  This causes an error
+        // during muxing. Work around it by dropping such packets here.
+        // See: https://github.com/HandBrake/HandBrake/issues/726
+        if (pkt.pts > pv->last_pts)
+        {
+            // The output pts from libav is in context->time_base. Convert it
+            // back to our timebase.
+            out->s.start = av_rescale_q(pkt.pts, pv->context->time_base,
+                                        (AVRational){1, 90000});
+            out->s.duration  = (double)90000 * pv->samples_per_frame /
+                                               audio->config.out.samplerate;
+            out->s.stop      = out->s.start + out->s.duration;
+            out->s.type      = AUDIO_BUF;
+            out->s.frametype = HB_FRAME_AUDIO;
 
-        hb_buffer_list_append(list, out);
+            hb_buffer_list_append(list, out);
+            pv->last_pts = pkt.pts;
+        }
         av_packet_unref(&pkt);
     }
 }

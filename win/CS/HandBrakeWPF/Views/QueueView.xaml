@@ -7,7 +7,6 @@
         xmlns:dd="clr-namespace:GongSolutions.Wpf.DragDrop;assembly=GongSolutions.Wpf.DragDrop"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:AttachedProperties="clr-namespace:HandBrakeWPF.AttachedProperties"
         xmlns:Audio="clr-namespace:HandBrakeWPF.Converters.Audio"
         xmlns:Subtitles="clr-namespace:HandBrakeWPF.Converters.Subtitles"
         xmlns:video="clr-namespace:HandBrakeWPF.Converters.Video"
@@ -154,7 +153,7 @@
                             <MenuItem cal:Message.Attach="[Event Click] = [Action ClearCompleted]" Header="{x:Static Properties:ResourcesUI.QueueView_ClearCompleted}" />
                             <MenuItem cal:Message.Attach="[Event Click] = [Action Clear]" Header="{x:Static Properties:ResourcesUI.QueueView_ClearQueue}" />
                             <Separator />
-                            <MenuItem cal:Message.Attach="[Event Click] = [Action Import]" Header="{x:Static Properties:ResourcesUI.QueueView_Import}" />
+                            <!--<MenuItem cal:Message.Attach="[Event Click] = [Action Import]" Header="{x:Static Properties:ResourcesUI.QueueView_Import}" />-->
                             <MenuItem cal:Message.Attach="[Event Click] = [Action Export]" Header="{x:Static Properties:ResourcesUI.QueueView_Export}" />
 
                         </MenuItem>
@@ -197,7 +196,7 @@
                     <MenuItem cal:Message.Attach="[Event Click] = [Action Clear]" Header="{x:Static Properties:ResourcesUI.QueueView_ClearAll}" />
                     <MenuItem cal:Message.Attach="[Event Click] = [Action RemoveSelectedJobs]" Header="{x:Static Properties:ResourcesUI.QueueView_ClearSelected}" />                 
                     <Separator />
-                    <MenuItem cal:Message.Attach="[Event Click] = [Action Import]" Header="{x:Static Properties:ResourcesUI.QueueView_Import}" />
+                    <!--<MenuItem cal:Message.Attach="[Event Click] = [Action Import]" Header="{x:Static Properties:ResourcesUI.QueueView_Import}" />-->
                     <MenuItem cal:Message.Attach="[Event Click] = [Action Export]" Header="{x:Static Properties:ResourcesUI.QueueView_Export}" />
                 </ContextMenu>
             </ListBox.ContextMenu>
@@ -265,16 +264,18 @@
 
                     <Grid HorizontalAlignment="Stretch">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="40" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
                         <!--  Marker  -->
-                        <Image Grid.Column="0"
-                               Width="16"
-                               Height="16"
-                               Margin="10,0,10,0">
+                        <Image Grid.Column="0" Width="16" Height="16" SnapsToDevicePixels="True">
+
+                            <Image.LayoutTransform>
+                                <RotateTransform CenterX="8" CenterY="8" Angle="0"/>
+                            </Image.LayoutTransform>
+
                             <Image.Style>
                                 <Style TargetType="{x:Type Image}">
                                     <Style.Triggers>
@@ -283,6 +284,20 @@
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding Status, Converter={StaticResource enumComboConverter}}" Value="In Progress">
                                             <Setter Property="Source" Value="Images\Working0.png" />
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Duration="0:0:2" To="180" Storyboard.TargetProperty="(Image.LayoutTransform).(RotateTransform.Angle)" RepeatBehavior="Forever" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Duration="0:0:0" To="0" Storyboard.TargetProperty="(Image.LayoutTransform).(RotateTransform.Angle)"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.ExitActions>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding Status, Converter={StaticResource enumComboConverter}}" Value="Completed">
                                             <Setter Property="Source" Value="Images\Complete.png" />
@@ -408,3 +423,4 @@
 
     </Grid>
 </Window>
+

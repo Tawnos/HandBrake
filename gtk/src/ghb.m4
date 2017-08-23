@@ -280,7 +280,7 @@ conjunction with the "Forced" option.</property>
     <property name="page_increment">16</property>
   </object>
   <object class="GtkAdjustment" id="adjustment3">
-    <property name="upper">20000</property>
+    <property name="upper">1000000</property>
     <property name="step_increment">10</property>
     <property name="page_increment">100</property>
   </object>
@@ -346,6 +346,11 @@ conjunction with the "Forced" option.</property>
     <property name="step_increment">0.1</property>
     <property name="page_increment">1</property>
   </object>
+  <object class="GtkAdjustment" id="DiskFreeLimitAdjustment">
+    <property name="upper">1000000</property>
+    <property name="step_increment">500</property>
+    <property name="page_increment">1000</property>
+  </object>
   <object class="GtkAboutDialog" id="hb_about">
     <property name="transient_for">hb_window</property>
     <property name="can_focus">False</property>
@@ -359,8 +364,8 @@ conjunction with the "Forced" option.</property>
     <property name="copyright" translatable="yes">Copyright © 2008 - 2017 John Stebbins
 Copyright © 2004 - 2017, HandBrake Devs</property>
     <property name="comments" translatable="yes">HandBrake is a GPL-licensed, multiplatform, multithreaded video transcoder.</property>
-    <property name="website">http://handbrake.fr</property>
-    <property name="website_label" translatable="yes">http://handbrake.fr</property>
+    <property name="website">https://handbrake.fr</property>
+    <property name="website_label" translatable="yes">https://handbrake.fr</property>
     <property name="license" translatable="yes">HandBrake is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
 
 HandBrake is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
@@ -1498,6 +1503,47 @@ This is often the feature title of a DVD.</property>
                               </packing>
                             </child>
                             <child>
+                              <object class="GtkCheckButton" id="Mp4HttpOptimize">
+                                <property name="label" translatable="yes">Web Optimized</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">False</property>
+                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                <property name="tooltip_text" translatable="yes">Optimize the layout of the MP4 file for progressive download.
+This allows a player to initiate playback before downloading the entire file.</property>
+                                <property name="halign">start</property>
+                                <property name="draw_indicator">True</property>
+                                <signal name="toggled" handler="setting_widget_changed_cb" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="top_attach">0</property>
+                                <property name="left_attach">1</property>
+                                <property name="width">1</property>
+                                <property name="height">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkCheckButton" id="AlignAVStart">
+                                <property name="label" translatable="yes">Align A/V Start</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">False</property>
+                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                <property name="tooltip_text" translatable="yes">Aligns the initial timestamps of all audio and video streams by
+inserting blank frames or dropping frames. May improve audio/video
+sync for broken players that do not honor MP4 edit lists.</property>
+                                <property name="halign">start</property>
+                                <property name="draw_indicator">True</property>
+                                <signal name="toggled" handler="setting_widget_changed_cb" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="top_attach">1</property>
+                                <property name="left_attach">0</property>
+                                <property name="width">1</property>
+                                <property name="height">1</property>
+                              </packing>
+                            </child>
+                            <child>
                               <object class="GtkCheckButton" id="Mp4iPodCompatible">
                                 <property name="label" translatable="yes">iPod 5G Support</property>
                                 <property name="visible">True</property>
@@ -1512,26 +1558,6 @@ This is often the feature title of a DVD.</property>
                               <packing>
                                 <property name="top_attach">1</property>
                                 <property name="left_attach">1</property>
-                                <property name="width">1</property>
-                                <property name="height">1</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkCheckButton" id="Mp4HttpOptimize">
-                                <property name="label" translatable="yes">Web optimized</property>
-                                <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="receives_default">False</property>
-                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                <property name="tooltip_text" translatable="yes">Optimize the layout of the MP4 file for progressive download.
-This allows a player to initiate playback before downloading the entire file.</property>
-                                <property name="halign">start</property>
-                                <property name="draw_indicator">True</property>
-                                <signal name="toggled" handler="setting_widget_changed_cb" swapped="no"/>
-                              </object>
-                              <packing>
-                                <property name="top_attach">1</property>
-                                <property name="left_attach">0</property>
                                 <property name="width">1</property>
                                 <property name="height">1</property>
                               </packing>
@@ -1670,7 +1696,7 @@ This allows a player to initiate playback before downloading the entire file.</p
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                             <property name="spacing">0</property>
                             <property name="margin-top">10</property>
-                            <property name="margin-start">10</property>
+                            <property name="margin-start">0</property>
                             <child>
                               <object class="GtkFrame" id="frame5">
                                 <property name="visible">True</property>
@@ -2075,7 +2101,7 @@ This allows a player to initiate playback before downloading the entire file.</p
                             <property name="can_focus">False</property>
                             <property name="valign">center</property>
                             <property name="margin-top">12</property>
-                            <property name="margin-end">12</property>
+                            <property name="margin-end">0</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                             <child>
                               <object class="GtkImage" id="preview_button_image">
@@ -2160,7 +2186,7 @@ This allows a player to initiate playback before downloading the entire file.</p
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="margin-top">16</property>
-                        <property name="margin-start">16</property>
+                        <property name="margin-start">0</property>
                         <property name="spacing">16</property>
                         <child>
                           <object class="GtkBox" id="hbox75">
@@ -2204,7 +2230,7 @@ This allows a player to initiate playback before downloading the entire file.</p
                                           <packing>
                                             <property name="top_attach">0</property>
                                             <property name="left_attach">0</property>
-                                            <property name="width">2</property>
+                                            <property name="width">4</property>
                                             <property name="height">1</property>
                                           </packing>
                                         </child>
@@ -2226,13 +2252,13 @@ the required multiple.</property>
                                           <packing>
                                             <property name="top_attach">1</property>
                                             <property name="left_attach">0</property>
-                                            <property name="width">2</property>
+                                            <property name="width">4</property>
                                             <property name="height">1</property>
                                           </packing>
                                         </child>
                                         <child>
                                           <object class="GtkSpinButton" id="PictureLeftCrop">
-                                            <property name="width-chars">7</property>
+                                            <property name="width-chars">6</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -2245,13 +2271,13 @@ the required multiple.</property>
                                           <packing>
                                             <property name="top_attach">2</property>
                                             <property name="left_attach">0</property>
-                                            <property name="width">1</property>
+                                            <property name="width">6</property>
                                             <property name="height">1</property>
                                           </packing>
                                         </child>
                                         <child>
                                           <object class="GtkSpinButton" id="PictureTopCrop">
-                                            <property name="width-chars">7</property>
+                                            <property name="width-chars">6</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -2263,14 +2289,14 @@ the required multiple.</property>
                                           </object>
                                           <packing>
                                             <property name="top_attach">1</property>
-                                            <property name="left_attach">1</property>
-                                            <property name="width">1</property>
+                                            <property name="left_attach">5</property>
+                                            <property name="width">6</property>
                                             <property name="height">1</property>
                                           </packing>
                                         </child>
                                         <child>
                                           <object class="GtkSpinButton" id="PictureBottomCrop">
-                                            <property name="width-chars">7</property>
+                                            <property name="width-chars">6</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -2282,14 +2308,14 @@ the required multiple.</property>
                                           </object>
                                           <packing>
                                             <property name="top_attach">3</property>
-                                            <property name="left_attach">1</property>
-                                            <property name="width">1</property>
+                                            <property name="left_attach">5</property>
+                                            <property name="width">6</property>
                                             <property name="height">1</property>
                                           </packing>
                                         </child>
                                         <child>
                                           <object class="GtkSpinButton" id="PictureRightCrop">
-                                            <property name="width-chars">7</property>
+                                            <property name="width-chars">6</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -2301,8 +2327,8 @@ the required multiple.</property>
                                           </object>
                                           <packing>
                                             <property name="top_attach">2</property>
-                                            <property name="left_attach">2</property>
-                                            <property name="width">1</property>
+                                            <property name="left_attach">10</property>
+                                            <property name="width">6</property>
                                             <property name="height">1</property>
                                           </packing>
                                         </child>
@@ -2317,7 +2343,7 @@ the required multiple.</property>
                                           <packing>
                                             <property name="top_attach">5</property>
                                             <property name="left_attach">0</property>
-                                            <property name="width">1</property>
+                                            <property name="width">4</property>
                                             <property name="height">1</property>
                                           </packing>
                                         </child>
@@ -2331,8 +2357,8 @@ the required multiple.</property>
                                           </object>
                                           <packing>
                                             <property name="top_attach">5</property>
-                                            <property name="left_attach">1</property>
-                                            <property name="width">1</property>
+                                            <property name="left_attach">4</property>
+                                            <property name="width">4</property>
                                             <property name="height">1</property>
                                           </packing>
                                         </child>
@@ -2419,7 +2445,7 @@ This will be the resolution that most closely matches the source resolution afte
                                         </child>
                                         <child>
                                           <object class="GtkSpinButton" id="scale_width">
-                                            <property name="width-chars">7</property>
+                                            <property name="width-chars">6</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -2454,7 +2480,7 @@ The actual display dimensions will differ if the pixel aspect ratio is not 1:1.<
                                         </child>
                                         <child>
                                           <object class="GtkSpinButton" id="scale_height">
-                                            <property name="width-chars">7</property>
+                                            <property name="width-chars">6</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -2643,7 +2669,7 @@ You should use 2 unless you experience compatibility issues.</property>
                                         </child>
                                         <child>
                                           <object class="GtkSpinButton" id="PictureDisplayWidth">
-                                            <property name="width-chars">7</property>
+                                            <property name="width-chars">6</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -2677,7 +2703,7 @@ You should use 2 unless you experience compatibility issues.</property>
                                         </child>
                                         <child>
                                           <object class="GtkSpinButton" id="PictureDisplayHeight">
-                                            <property name="width-chars">7</property>
+                                            <property name="width-chars">6</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -2725,7 +2751,7 @@ You should use 2 unless you experience compatibility issues.</property>
                                         </child>
                                         <child>
                                           <object class="GtkSpinButton" id="PicturePARWidth">
-                                            <property name="width-chars">8</property>
+                                            <property name="width-chars">6</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -2762,7 +2788,7 @@ Players will scale the image in order to achieve the specified aspect.</property
                                         </child>
                                         <child>
                                           <object class="GtkSpinButton" id="PicturePARHeight">
-                                            <property name="width-chars">8</property>
+                                            <property name="width-chars">6</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -2865,7 +2891,7 @@ filter_output([
                         <property name="column-spacing">4</property>
                         <property name="row-spacing">32</property>
                         <property name="margin-top">16</property>
-                        <property name="margin-start">16</property>
+                        <property name="margin-start">0</property>
                         <property name="valign">start</property>
                         <property name="halign">fill</property>
                         <child>
@@ -3164,8 +3190,8 @@ If your source exhibits 'blockiness', this filter may help clean it up.</propert
 ])dnl
 ifelse(eval(gtk_version < 312), 1, filter_output([
                           <packing>
-                            <property name="top_attach">1</property>
-                            <property name="left_attach">0</property>
+                            <property name="top_attach">0</property>
+                            <property name="left_attach">3</property>
                             <property name="width">1</property>
                             <property name="height">1</property>
                           </packing>
@@ -3302,6 +3328,140 @@ SpatialLuma:SpatialChroma:TemporalLuma:TemporalChroma</property>
 ifelse(eval(gtk_version < 312), 1, filter_output([
                           <packing>
                             <property name="top_attach">1</property>
+                            <property name="left_attach">0</property>
+                            <property name="width">1</property>
+                            <property name="height">1</property>
+                          </packing>
+]))dnl
+filter_output([
+                        </child>
+                        <child>
+                          <object class="GtkGrid" id="SharpenTable">
+                            <property name="row-spacing">2</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="column_spacing">5</property>
+                            <property name="halign">start</property>
+                            <property name="valign">start</property>
+                            <child>
+                              <object class="GtkLabel" id="PictureSharpenFilterel">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">Sharpen Filter:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">0</property>
+                                <property name="left_attach">0</property>
+                                <property name="width">1</property>
+                                <property name="height">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkComboBox" id="PictureSharpenFilter">
+                                <property name="valign">GTK_ALIGN_CENTER</property>
+                                <property name="width_request">100</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                <property name="tooltip_text" translatable="yes">Sharpen filtering enhances edges and other
+high frequency components in the video.</property>
+                                <signal name="changed" handler="sharpen_filter_changed_cb" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="top_attach">0</property>
+                                <property name="left_attach">1</property>
+                                <property name="width">1</property>
+                                <property name="height">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="PictureSharpenPresetLabel">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">Sharpen Preset:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">1</property>
+                                <property name="left_attach">0</property>
+                                <property name="width">1</property>
+                                <property name="height">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkComboBox" id="PictureSharpenPreset">
+                                <property name="valign">GTK_ALIGN_CENTER</property>
+                                <property name="width_request">100</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                <property name="tooltip_text" translatable="yes">Sharpen filtering enhances edges and other
+high frequency components in the video.</property>
+                                <signal name="changed" handler="setting_widget_changed_cb" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="top_attach">1</property>
+                                <property name="left_attach">1</property>
+                                <property name="width">1</property>
+                                <property name="height">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="PictureSharpenTuneLabel">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">Sharpen Tune:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">2</property>
+                                <property name="left_attach">0</property>
+                                <property name="width">1</property>
+                                <property name="height">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkComboBox" id="PictureSharpenTune">
+                                <property name="valign">GTK_ALIGN_CENTER</property>
+                                <property name="width_request">100</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                <property name="tooltip_text" translatable="yes">Sharpen filtering enhances edges and other
+high frequency components in the video.</property>
+                                <signal name="changed" handler="setting_widget_changed_cb" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="top_attach">2</property>
+                                <property name="left_attach">1</property>
+                                <property name="width">1</property>
+                                <property name="height">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkEntry" id="PictureSharpenCustom">
+                                <property name="can_focus">True</property>
+                                <property name="tooltip_text" translatable="yes">Custom denoise filter string format
+
+SpatialLuma:SpatialChroma:TemporalLuma:TemporalChroma</property>
+                                <property name="width_chars">8</property>
+                                <property name="primary_icon_activatable">False</property>
+                                <property name="secondary_icon_activatable">False</property>
+                                <signal name="changed" handler="setting_widget_changed_cb" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="top_attach">3</property>
+                                <property name="left_attach">1</property>
+                                <property name="width">1</property>
+                                <property name="height">1</property>
+                              </packing>
+                            </child>
+                          </object>
+])dnl
+ifelse(eval(gtk_version < 312), 1, filter_output([
+                          <packing>
+                            <property name="top_attach">1</property>
                             <property name="left_attach">1</property>
                             <property name="width">1</property>
                             <property name="height">1</property>
@@ -3413,7 +3573,7 @@ filter_output([
                                 <property name="column_spacing">5</property>
                                 <property name="row-spacing">2</property>
                                 <property name="margin-top">12</property>
-                                <property name="margin-start">24</property>
+                                <property name="margin-start">0</property>
                                 <child>
                                   <object class="GtkLabel" id="label46">
                                     <property name="visible">True</property>
@@ -3556,7 +3716,7 @@ VFR is not compatible with some players.</property>
                                 <property name="column_spacing">5</property>
                                 <property name="row-spacing">2</property>
                                 <property name="margin-top">12</property>
-                                <property name="margin-end">24</property>
+                                <property name="margin-end">0</property>
                                 <child>
                                   <object class="GtkScale" id="VideoQualitySlider">
                                     <property name="visible">True</property>
@@ -3729,8 +3889,8 @@ to make bitrate allocation decisions.</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="margin-start">24</property>
-                            <property name="margin-end">24</property>
+                            <property name="margin-start">0</property>
+                            <property name="margin-end">0</property>
                             <child>
                               <object class="GtkCheckButton" id="x264UseAdvancedOptions">
                                 <property name="label" translatable="yes">Use Advanced Options</property>
@@ -4031,442 +4191,670 @@ Colon separated list of encoder options.</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkBox" id="audio_defaults_tab">
+                      <object class="GtkBox" id="audio_tab">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="orientation">vertical</property>
-                        <property name="margin-start">12</property>
-                        <property name="margin-end">12</property>
+                        <property name="orientation">horizontal</property>
+                        <property name="margin-start">0</property>
+                        <property name="margin-end">0</property>
                         <property name="margin_top">12</property>
-                        <property name="margin_bottom">12</property>
+                        <property name="margin_bottom">0</property>
                         <property name="hexpand">True</property>
+                        <property name="vexpand">True</property>
+])dnl
+ifelse(eval(gtk_version < 316), 1, filter_output([
                         <child>
-                          <object class="GtkBox" id="audio_defaults_box1">
+                          <object class="GtkBox" id="audio_toggle_hbox">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="orientation">horizontal</property>
-                            <property name="spacing">6</property>
+                            <property name="hexpand">False</property>
+                            <property name="vexpand">True</property>
                             <child>
-                              <object class="GtkBox" id="audio_defaults_box2">
+                              <object class="GtkBox" id="audio_toggle_vbox">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="orientation">vertical</property>
+                                <property name="hexpand">False</property>
+                                <property name="vexpand">True</property>
                                 <child>
-                                  <object class="GtkGrid" id="grid2">
+                                  <object class="GtkToggleButton" id="audio_list_toggle">
+                                    <property name="label" translatable="yes">Track List</property>
+                                    <property name="active">True</property>
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <property name="column_spacing">5</property>
-                                    <property name="row-spacing">2</property>
-                                    <child>
-                                      <object class="GtkLabel" id="label4">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="halign">end</property>
-                                        <property name="label" translatable="yes">Selection Behavior:</property>
-                                        <property name="justify">right</property>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">0</property>
-                                        <property name="top_attach">0</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkComboBox" id="AudioTrackSelectionBehavior">
-                                        <property name="visible">True</property>
-                                        <property name="valign">GTK_ALIGN_CENTER</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="tooltip_text" translatable="yes">Choose which audio tracks of the source media are used.</property>
-                                        <signal name="changed" handler="audio_def_widget_changed_cb" swapped="no"/>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">1</property>
-                                        <property name="top_attach">0</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">Show Output Audio Track List</property>
+                                    <property name="receives_default">True</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="halign">fill</property>
+                                    <signal name="toggled" handler="audio_list_toggled_cb" swapped="no"/>
                                   </object>
                                   <packing>
-                                    <property name="fill">True</property>
                                     <property name="position">0</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkGrid" id="grid3">
+                                  <object class="GtkToggleButton" id="audio_selection_toggle">
+                                    <property name="label" translatable="yes">Track Selection</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">Show Source Track Selection Options</property>
+                                    <property name="receives_default">True</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="halign">fill</property>
+                                    <signal name="toggled" handler="audio_selection_toggled_cb" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkSeparator" id="audio_separator">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                              </object>
+                              <packing>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+]), filter_output([
+                        <child>
+                          <object class="GtkStackSidebar" id="AudioStackSidebar">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                            <property name="stack">AudioStack</property>
+                            <property name="hexpand">False</property>
+                            <property name="vexpand">True</property>
+                            <property name="valign">GTK_ALIGN_FILL</property>
+                            <property name="halign">start</property>
+                          </object>
+                          <packing>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+]))dnl
+filter_output([
+                        <child>
+                          <object class="GtkStack" id="AudioStack">
+                            <property name="homogeneous">True</property>
+                            <property name="transition-type">GTK_STACK_TRANSITION_TYPE_SLIDE_LEFT_RIGHT</property>
+                            <property name="transition-duration">400</property>
+                            <property name="visible">True</property>
+                            <property name="hexpand">True</property>
+                            <property name="vexpand">True</property>
+                            <property name="can_focus">False</property>
+
+                            <property name="margin-top">0</property>
+                            <property name="margin-bottom">0</property>
+                            <property name="margin-start">12</property>
+                            <child>
+                              <object class="GtkBox" id="audio_list_tab">
+                                <property name="orientation">vertical</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                <child>
+                                  <object class="GtkBox" id="vbox17">
+                                    <property name="orientation">vertical</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="column_spacing">5</property>
-                                    <property name="row-spacing">2</property>
-                                    <property name="halign">GTK_ALIGN_END</property>
-                                    <property name="margin_top">6</property>
-                                    <property name="margin_bottom">6</property>
+                                    <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                    <property name="spacing">2</property>
                                     <child>
-                                      <object class="GtkScrolledWindow" id="scrolledwindow10">
+                                      <object class="GtkToolbar" id="audio_toolbar">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                        <child>
+                                          <object class="GtkToolButton" id="audio_add">
+                                            <property name="visible">True</property>
+                                            <property name="sensitive">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="is_important">True</property>
+                                            <property name="label" translatable="yes">Add</property>
+                                            <property name="icon_name">list-add</property>
+                                            <property name="tooltip_text" translatable="yes">Add new audio settings to the list</property>
+                                            <signal name="clicked" handler="audio_add_clicked_cb" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkToolButton" id="audio_add_all">
+                                            <property name="visible">True</property>
+                                            <property name="sensitive">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="is_important">True</property>
+                                            <property name="label" translatable="yes">Add All</property>
+                                            <property name="icon_name">list-add</property>
+                                            <property name="tooltip_text" translatable="yes">Add all audio tracks to the list</property>
+                                            <signal name="clicked" handler="audio_add_all_clicked_cb" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkToolButton" id="audio_reset">
+                                            <property name="visible">True</property>
+                                            <property name="sensitive">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                            <property name="is_important">True</property>
+                                            <property name="label" translatable="yes">Reload</property>
+                                            <property name="icon_name">emblem-default</property>
+                                            <property name="tooltip_text" translatable="yes">Reload all audio settings from defaults</property>
+                                            <signal name="clicked" handler="audio_reset_clicked_cb" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                          </packing>
+                                        </child>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">0</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkScrolledWindow" id="scrolledwindow5">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
                                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                        <property name="min_content_height">84</property>
+                                        <property name="vexpand">True</property>
+                                        <property name="valign">GTK_ALIGN_FILL</property>
                                         <child>
-                                          <object class="GtkListBox" id="audio_avail_lang">
+                                          <object class="GtkTreeView" id="audio_list_view">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
+                                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                            <property name="headers_visible">False</property>
+                                            <property name="headers_clickable">False</property>
+                                            <child internal-child="selection">
+                                              <object class="GtkTreeSelection" id="treeview-selection1"/>
+                                            </child>
                                           </object>
                                         </child>
                                       </object>
                                       <packing>
-                                        <property name="left_attach">0</property>
-                                        <property name="top_attach">1</property>
-                                        <property name="width">1</property>
-                                        <property name="height">4</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkScrolledWindow" id="scrolledwindow11">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
-                                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                        <child>
-                                          <object class="GtkListBox" id="audio_selected_lang">
-                                            <property name="visible">True</property>
-                                            <property name="can_focus">True</property>
-                                            <property name="tooltip_text" translatable="yes">Create a list of languages you would like to select audio for.
-Tracks matching these languages will be selected using the chosen Selection Behavior.</property>
-                                          </object>
-                                        </child>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">2</property>
-                                        <property name="top_attach">1</property>
-                                        <property name="width">1</property>
-                                        <property name="height">4</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkButton" id="audio_lang_add">
-                                        <property name="label" translatable="yes">Add</property>
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="receives_default">True</property>
-                                        <property name="valign">GTK_ALIGN_CENTER</property>
-                                        <signal name="clicked" handler="audio_add_lang_clicked_cb" swapped="no"/>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">1</property>
-                                        <property name="top_attach">2</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkButton" id="audio_lang_remove">
-                                        <property name="label" translatable="yes">Remove</property>
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="receives_default">True</property>
-                                        <property name="valign">GTK_ALIGN_CENTER</property>
-                                        <signal name="clicked" handler="audio_remove_lang_clicked_cb" swapped="no"/>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">1</property>
-                                        <property name="top_attach">3</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkLabel" id="label8">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="label" translatable="yes">Available Languages</property>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">0</property>
-                                        <property name="top_attach">0</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkLabel" id="label24">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="label" translatable="yes">Selected Languages</property>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">2</property>
-                                        <property name="top_attach">0</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
+                                        <property name="expand">True</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">2</property>
                                       </packing>
                                     </child>
                                   </object>
                                   <packing>
                                     <property name="expand">True</property>
                                     <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkCheckButton" id="AudioSecondaryEncoderMode">
-                                    <property name="label" translatable="yes">Use only first encoder for secondary audio</property>
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="receives_default">False</property>
-                                    <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                    <property name="tooltip_text" translatable="yes">Only the primary audio track will be encoded with the full encoder list.
-All other secondary audio output tracks will be encoded with first encoder only.</property>
-                                    <property name="halign">start</property>
-                                    <property name="active">True</property>
-                                    <property name="draw_indicator">True</property>
-                                    <signal name="toggled" handler="audio_def_widget_changed_cb" swapped="no"/>
-                                  </object>
-                                  <packing>
-                                    <property name="position">2</property>
+                                    <property name="position">0</property>
                                   </packing>
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
                                 <property name="position">0</property>
+                                <property name="name">audio_list_tab</property>
+                                <property name="title" translatable="yes">Track List</property>
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkBox" id="auto_pass_box">
+                              <object class="GtkBox" id="audio_selection_tab">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="orientation">vertical</property>
-                                <property name="margin-start">6</property>
-                                <property name="spacing">2</property>
+                                <property name="hexpand">True</property>
                                 <child>
-                                  <object class="GtkGrid" id="grid4">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <property name="column_spacing">5</property>
-                                    <property name="row-spacing">2</property>
-                                    <property name="halign">end</property>
-                                    <child>
-                                      <object class="GtkLabel" id="labela3">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                        <property name="halign">start</property>
-                                        <property name="label" translatable="yes">Auto Passthru:</property>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">0</property>
-                                        <property name="top_attach">0</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkCheckButton" id="AudioAllowMP3Pass">
-                                        <property name="label" translatable="yes">MP3</property>
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="receives_default">False</property>
-                                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                        <property name="tooltip_text" translatable="yes">Enable this if your playback device supports MP3.
-This permits MP3 passthru to be selected when automatic passthru selection is enabled.</property>
-                                        <property name="halign">start</property>
-                                        <property name="active">True</property>
-                                        <property name="draw_indicator">True</property>
-                                        <signal name="toggled" handler="audio_passthru_widget_changed_cb" swapped="no"/>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">1</property>
-                                        <property name="top_attach">0</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkCheckButton" id="AudioAllowAACPass">
-                                        <property name="label" translatable="yes">AAC</property>
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="receives_default">False</property>
-                                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                        <property name="tooltip_text" translatable="yes">Enable this if your playback device supports AAC.
-This permits AAC passthru to be selected when automatic passthru selection is enabled.</property>
-                                        <property name="halign">start</property>
-                                        <property name="active">True</property>
-                                        <property name="draw_indicator">True</property>
-                                        <signal name="toggled" handler="audio_passthru_widget_changed_cb" swapped="no"/>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">2</property>
-                                        <property name="top_attach">0</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkCheckButton" id="AudioAllowAC3Pass">
-                                        <property name="label" translatable="yes">AC-3</property>
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="receives_default">False</property>
-                                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                        <property name="tooltip_text" translatable="yes">Enable this if your playback device supports AC-3.
-This permits AC-3 passthru to be selected when automatic passthru selection is enabled.</property>
-                                        <property name="halign">start</property>
-                                        <property name="active">True</property>
-                                        <property name="draw_indicator">True</property>
-                                        <signal name="toggled" handler="audio_passthru_widget_changed_cb" swapped="no"/>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">1</property>
-                                        <property name="top_attach">1</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkCheckButton" id="AudioAllowDTSPass">
-                                        <property name="label" translatable="yes">DTS</property>
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="receives_default">False</property>
-                                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                        <property name="tooltip_text" translatable="yes">Enable this if your playback device supports DTS.
-This permits DTS passthru to be selected when automatic passthru selection is enabled.</property>
-                                        <property name="halign">start</property>
-                                        <property name="active">True</property>
-                                        <property name="draw_indicator">True</property>
-                                        <signal name="toggled" handler="audio_passthru_widget_changed_cb" swapped="no"/>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">1</property>
-                                        <property name="top_attach">2</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkCheckButton" id="AudioAllowDTSHDPass">
-                                        <property name="label" translatable="yes">DTS-HD</property>
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="receives_default">False</property>
-                                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                        <property name="tooltip_text" translatable="yes">Enable this if your playback device supports DTS-HD.
-This permits DTS-HD passthru to be selected when automatic passthru selection is enabled.</property>
-                                        <property name="halign">start</property>
-                                        <property name="active">True</property>
-                                        <property name="draw_indicator">True</property>
-                                        <signal name="toggled" handler="audio_passthru_widget_changed_cb" swapped="no"/>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">2</property>
-                                        <property name="top_attach">2</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkCheckButton" id="AudioAllowEAC3Pass">
-                                        <property name="label" translatable="yes">EAC-3</property>
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="receives_default">False</property>
-                                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                        <property name="tooltip_text" translatable="yes">Enable this if your playback device supports EAC-3.
-This permits EAC-3 passthru to be selected when automatic passthru selection is enabled.</property>
-                                        <property name="halign">start</property>
-                                        <property name="active">True</property>
-                                        <property name="draw_indicator">True</property>
-                                        <signal name="toggled" handler="audio_passthru_widget_changed_cb" swapped="no"/>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">2</property>
-                                        <property name="top_attach">1</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkCheckButton" id="AudioAllowTRUEHDPass">
-                                        <property name="label" translatable="yes">TrueHD</property>
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="receives_default">False</property>
-                                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                        <property name="tooltip_text" translatable="yes">Enable this if your playback device supports TrueHD.
-This permits TrueHD passthru to be selected when automatic passthru selection is enabled.</property>
-                                        <property name="halign">start</property>
-                                        <property name="active">True</property>
-                                        <property name="draw_indicator">True</property>
-                                        <signal name="toggled" handler="audio_passthru_widget_changed_cb" swapped="no"/>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">1</property>
-                                        <property name="top_attach">3</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkCheckButton" id="AudioAllowFLACPass">
-                                        <property name="label" translatable="yes">FLAC</property>
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="receives_default">False</property>
-                                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                        <property name="tooltip_text" translatable="yes">Enable this if your playback device supports FLAC.
-This permits FLAC passthru to be selected when automatic passthru selection is enabled.</property>
-                                        <property name="halign">start</property>
-                                        <property name="active">True</property>
-                                        <property name="draw_indicator">True</property>
-                                        <signal name="toggled" handler="audio_passthru_widget_changed_cb" swapped="no"/>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">2</property>
-                                        <property name="top_attach">3</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
-                                  </object>
-                                  <packing>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkBox" id="auto_fallback_box">
+                                  <object class="GtkBox" id="audio_selection_box1">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="orientation">horizontal</property>
                                     <property name="spacing">6</property>
-                                    <property name="halign">end</property>
                                     <child>
-                                      <object class="GtkLabel" id="labela4">
+                                      <object class="GtkBox" id="audio_defaults_box2">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
-                                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                        <property name="halign">end</property>
-                                        <property name="hexpand">True</property>
-                                        <property name="label" translatable="yes">Passthru Fallback:</property>
+                                        <property name="orientation">vertical</property>
+                                        <child>
+                                          <object class="GtkGrid" id="grid2">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">False</property>
+                                            <property name="column_spacing">5</property>
+                                            <property name="row-spacing">2</property>
+                                            <child>
+                                              <object class="GtkLabel" id="label4">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="halign">end</property>
+                                                <property name="label" translatable="yes">Selection Behavior:</property>
+                                                <property name="justify">right</property>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">0</property>
+                                                <property name="top_attach">0</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkComboBox" id="AudioTrackSelectionBehavior">
+                                                <property name="visible">True</property>
+                                                <property name="valign">GTK_ALIGN_CENTER</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="tooltip_text" translatable="yes">Choose which audio tracks of the source media are used.</property>
+                                                <signal name="changed" handler="audio_def_widget_changed_cb" swapped="no"/>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">1</property>
+                                                <property name="top_attach">0</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                          </object>
+                                          <packing>
+                                            <property name="fill">True</property>
+                                            <property name="position">0</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkGrid" id="grid3">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">False</property>
+                                            <property name="column_spacing">5</property>
+                                            <property name="row-spacing">2</property>
+                                            <property name="halign">GTK_ALIGN_END</property>
+                                            <property name="margin_top">6</property>
+                                            <property name="margin_bottom">6</property>
+                                            <child>
+                                              <object class="GtkScrolledWindow" id="scrolledwindow10">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
+                                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                                <property name="min_content_height">84</property>
+                                                <child>
+                                                  <object class="GtkListBox" id="audio_avail_lang">
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">True</property>
+                                                  </object>
+                                                </child>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">0</property>
+                                                <property name="top_attach">1</property>
+                                                <property name="width">1</property>
+                                                <property name="height">4</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkScrolledWindow" id="scrolledwindow11">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
+                                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                                <child>
+                                                  <object class="GtkListBox" id="audio_selected_lang">
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">True</property>
+                                                    <property name="tooltip_text" translatable="yes">Create a list of languages you would like to select audio for.
+        Tracks matching these languages will be selected using the chosen Selection Behavior.</property>
+                                                  </object>
+                                                </child>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">2</property>
+                                                <property name="top_attach">1</property>
+                                                <property name="width">1</property>
+                                                <property name="height">4</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkButton" id="audio_lang_add">
+                                                <property name="label" translatable="yes">Add</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">True</property>
+                                                <property name="valign">GTK_ALIGN_CENTER</property>
+                                                <signal name="clicked" handler="audio_add_lang_clicked_cb" swapped="no"/>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">1</property>
+                                                <property name="top_attach">2</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkButton" id="audio_lang_remove">
+                                                <property name="label" translatable="yes">Remove</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">True</property>
+                                                <property name="valign">GTK_ALIGN_CENTER</property>
+                                                <signal name="clicked" handler="audio_remove_lang_clicked_cb" swapped="no"/>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">1</property>
+                                                <property name="top_attach">3</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkLabel" id="label8">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="label" translatable="yes">Available Languages</property>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">0</property>
+                                                <property name="top_attach">0</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkLabel" id="label24">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="label" translatable="yes">Selected Languages</property>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">2</property>
+                                                <property name="top_attach">0</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">True</property>
+                                            <property name="fill">True</property>
+                                            <property name="position">1</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkCheckButton" id="AudioSecondaryEncoderMode">
+                                            <property name="label" translatable="yes">Use only first encoder for secondary audio</property>
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="receives_default">False</property>
+                                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                            <property name="tooltip_text" translatable="yes">Only the primary audio track will be encoded with the full encoder list.
+        All other secondary audio output tracks will be encoded with first encoder only.</property>
+                                            <property name="halign">start</property>
+                                            <property name="active">True</property>
+                                            <property name="draw_indicator">True</property>
+                                            <signal name="toggled" handler="audio_def_widget_changed_cb" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="position">2</property>
+                                          </packing>
+                                        </child>
                                       </object>
                                       <packing>
+                                        <property name="expand">False</property>
                                         <property name="fill">True</property>
                                         <property name="position">0</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkComboBox" id="AudioEncoderFallback">
+                                      <object class="GtkBox" id="auto_pass_box">
                                         <property name="visible">True</property>
-                                        <property name="valign">GTK_ALIGN_CENTER</property>
                                         <property name="can_focus">False</property>
-                                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                        <property name="tooltip_text" translatable="yes">Set the audio codec to encode with when a suitable track can not be found for audio passthru.</property>
-                                        <signal name="changed" handler="audio_fallback_widget_changed_cb" swapped="no"/>
+                                        <property name="orientation">vertical</property>
+                                        <property name="margin-start">6</property>
+                                        <property name="spacing">2</property>
+                                        <child>
+                                          <object class="GtkGrid" id="grid4">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">False</property>
+                                            <property name="column_spacing">5</property>
+                                            <property name="row-spacing">2</property>
+                                            <property name="halign">end</property>
+                                            <child>
+                                              <object class="GtkLabel" id="labela3">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                                <property name="halign">start</property>
+                                                <property name="label" translatable="yes">Auto Passthru:</property>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">0</property>
+                                                <property name="top_attach">0</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkCheckButton" id="AudioAllowMP3Pass">
+                                                <property name="label" translatable="yes">MP3</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">False</property>
+                                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                                <property name="tooltip_text" translatable="yes">Enable this if your playback device supports MP3.
+        This permits MP3 passthru to be selected when automatic passthru selection is enabled.</property>
+                                                <property name="halign">start</property>
+                                                <property name="active">True</property>
+                                                <property name="draw_indicator">True</property>
+                                                <signal name="toggled" handler="audio_passthru_widget_changed_cb" swapped="no"/>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">1</property>
+                                                <property name="top_attach">0</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkCheckButton" id="AudioAllowAACPass">
+                                                <property name="label" translatable="yes">AAC</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">False</property>
+                                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                                <property name="tooltip_text" translatable="yes">Enable this if your playback device supports AAC.
+        This permits AAC passthru to be selected when automatic passthru selection is enabled.</property>
+                                                <property name="halign">start</property>
+                                                <property name="active">True</property>
+                                                <property name="draw_indicator">True</property>
+                                                <signal name="toggled" handler="audio_passthru_widget_changed_cb" swapped="no"/>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">2</property>
+                                                <property name="top_attach">0</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkCheckButton" id="AudioAllowAC3Pass">
+                                                <property name="label" translatable="yes">AC-3</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">False</property>
+                                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                                <property name="tooltip_text" translatable="yes">Enable this if your playback device supports AC-3.
+        This permits AC-3 passthru to be selected when automatic passthru selection is enabled.</property>
+                                                <property name="halign">start</property>
+                                                <property name="active">True</property>
+                                                <property name="draw_indicator">True</property>
+                                                <signal name="toggled" handler="audio_passthru_widget_changed_cb" swapped="no"/>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">1</property>
+                                                <property name="top_attach">1</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkCheckButton" id="AudioAllowDTSPass">
+                                                <property name="label" translatable="yes">DTS</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">False</property>
+                                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                                <property name="tooltip_text" translatable="yes">Enable this if your playback device supports DTS.
+        This permits DTS passthru to be selected when automatic passthru selection is enabled.</property>
+                                                <property name="halign">start</property>
+                                                <property name="active">True</property>
+                                                <property name="draw_indicator">True</property>
+                                                <signal name="toggled" handler="audio_passthru_widget_changed_cb" swapped="no"/>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">1</property>
+                                                <property name="top_attach">2</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkCheckButton" id="AudioAllowDTSHDPass">
+                                                <property name="label" translatable="yes">DTS-HD</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">False</property>
+                                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                                <property name="tooltip_text" translatable="yes">Enable this if your playback device supports DTS-HD.
+        This permits DTS-HD passthru to be selected when automatic passthru selection is enabled.</property>
+                                                <property name="halign">start</property>
+                                                <property name="active">True</property>
+                                                <property name="draw_indicator">True</property>
+                                                <signal name="toggled" handler="audio_passthru_widget_changed_cb" swapped="no"/>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">2</property>
+                                                <property name="top_attach">2</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkCheckButton" id="AudioAllowEAC3Pass">
+                                                <property name="label" translatable="yes">EAC-3</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">False</property>
+                                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                                <property name="tooltip_text" translatable="yes">Enable this if your playback device supports EAC-3.
+        This permits EAC-3 passthru to be selected when automatic passthru selection is enabled.</property>
+                                                <property name="halign">start</property>
+                                                <property name="active">True</property>
+                                                <property name="draw_indicator">True</property>
+                                                <signal name="toggled" handler="audio_passthru_widget_changed_cb" swapped="no"/>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">2</property>
+                                                <property name="top_attach">1</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkCheckButton" id="AudioAllowTRUEHDPass">
+                                                <property name="label" translatable="yes">TrueHD</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">False</property>
+                                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                                <property name="tooltip_text" translatable="yes">Enable this if your playback device supports TrueHD.
+        This permits TrueHD passthru to be selected when automatic passthru selection is enabled.</property>
+                                                <property name="halign">start</property>
+                                                <property name="active">True</property>
+                                                <property name="draw_indicator">True</property>
+                                                <signal name="toggled" handler="audio_passthru_widget_changed_cb" swapped="no"/>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">1</property>
+                                                <property name="top_attach">3</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkCheckButton" id="AudioAllowFLACPass">
+                                                <property name="label" translatable="yes">FLAC</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">False</property>
+                                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                                <property name="tooltip_text" translatable="yes">Enable this if your playback device supports FLAC.
+        This permits FLAC passthru to be selected when automatic passthru selection is enabled.</property>
+                                                <property name="halign">start</property>
+                                                <property name="active">True</property>
+                                                <property name="draw_indicator">True</property>
+                                                <signal name="toggled" handler="audio_passthru_widget_changed_cb" swapped="no"/>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">2</property>
+                                                <property name="top_attach">3</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                          </object>
+                                          <packing>
+                                            <property name="fill">True</property>
+                                            <property name="position">0</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkBox" id="auto_fallback_box">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">False</property>
+                                            <property name="orientation">horizontal</property>
+                                            <property name="spacing">6</property>
+                                            <property name="halign">end</property>
+                                            <child>
+                                              <object class="GtkLabel" id="labela4">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                                <property name="halign">end</property>
+                                                <property name="hexpand">True</property>
+                                                <property name="label" translatable="yes">Passthru Fallback:</property>
+                                              </object>
+                                              <packing>
+                                                <property name="fill">True</property>
+                                                <property name="position">0</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkComboBox" id="AudioEncoderFallback">
+                                                <property name="visible">True</property>
+                                                <property name="valign">GTK_ALIGN_CENTER</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                                <property name="tooltip_text" translatable="yes">Set the audio codec to encode with when a suitable track can not be found for audio passthru.</property>
+                                                <signal name="changed" handler="audio_fallback_widget_changed_cb" swapped="no"/>
+                                              </object>
+                                              <packing>
+                                                <property name="fill">True</property>
+                                                <property name="position">1</property>
+                                              </packing>
+                                            </child>
+                                          </object>
+                                          <packing>
+                                            <property name="fill">True</property>
+                                            <property name="position">1</property>
+                                          </packing>
+                                        </child>
                                       </object>
                                       <packing>
                                         <property name="fill">True</property>
@@ -4475,785 +4863,795 @@ This permits FLAC passthru to be selected when automatic passthru selection is e
                                     </child>
                                   </object>
                                   <packing>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
+                                    <property name="position">0</property>
                                   </packing>
                                 </child>
-                              </object>
-                              <packing>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
-                              </packing>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="audio_def_settings_label">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="margin_top">6</property>
-                            <property name="halign">start</property>
-                            <property name="use_markup">True</property>
-                            <property name="label" translatable="yes">&lt;b&gt;Audio Encoder Settings:&lt;/b&gt;</property>
-                            <property name="tooltip_markup" translatable="yes">Each selected source track will be encoded with all selected encoders</property>
-                          </object>
-                          <packing>
-                            <property name="position">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkSeparator" id="sep1">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                          </object>
-                          <packing>
-                            <property name="position">3</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkBox" id="audio_list_default_header">
-                            <property name="orientation">horizontal</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <child>
-                              <object class="GtkLabel" id="audio_defaults_encoder_label">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">Encoder</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkLabel" id="audio_defaults_bitrate_label">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">Bitrate/Quality</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">1</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkLabel" id="audio_defaults_mixdown_label">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">Mixdown</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">2</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkLabel" id="audio_defaults_samplerate_label">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">Samplerate</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">3</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkLabel" id="audio_defaults_gain_label">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">Gain</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">4</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkLabel" id="audio_defaults_drc_label">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">DRC</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">5</property>
-                              </packing>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="position">4</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkScrolledWindow" id="scrolledwindow12">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="hexpand">True</property>
-                            <child>
-                              <object class="GtkListBox" id="audio_list_default">
-                                <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="vexpand">True</property>
-                                <property name="selection_mode">none</property>
-                                <property name="activate_on_single_click">False</property>
-                              </object>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">True</property>
-                            <property name="position">5</property>
-                          </packing>
-                        </child>
-                      </object>
-                      <packing>
-                        <property name="position">4</property>
-                        <property name="name">audio_defaults_tab</property>
-                        <property name="title" translatable="yes">Audio Defaults</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkBox" id="audio_list_tab">
-                        <property name="orientation">vertical</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                        <child>
-                          <object class="GtkBox" id="vbox17">
-                            <property name="orientation">vertical</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="spacing">2</property>
-                            <property name="margin-top">6</property>
-                            <property name="margin-bottom">6</property>
-                            <property name="margin-start">6</property>
-                            <property name="margin-end">6</property>
-                            <child>
-                              <object class="GtkToolbar" id="audio_toolbar">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                                 <child>
-                                  <object class="GtkToolButton" id="audio_add">
+                                  <object class="GtkLabel" id="audio_def_settings_label">
                                     <property name="visible">True</property>
-                                    <property name="sensitive">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="is_important">True</property>
-                                    <property name="label" translatable="yes">Add</property>
-                                    <property name="icon_name">list-add</property>
-                                    <property name="tooltip_text" translatable="yes">Add new audio settings to the list</property>
-                                    <signal name="clicked" handler="audio_add_clicked_cb" swapped="no"/>
+                                    <property name="can_focus">False</property>
+                                    <property name="margin_top">6</property>
+                                    <property name="halign">start</property>
+                                    <property name="use_markup">True</property>
+                                    <property name="label" translatable="yes">&lt;b&gt;Audio Encoder Settings:&lt;/b&gt;</property>
+                                    <property name="tooltip_markup" translatable="yes">Each selected source track will be encoded with all selected encoders</property>
                                   </object>
                                   <packing>
-                                    <property name="expand">False</property>
+                                    <property name="position">2</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkToolButton" id="audio_add_all">
+                                  <object class="GtkSeparator" id="sep1">
                                     <property name="visible">True</property>
-                                    <property name="sensitive">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="is_important">True</property>
-                                    <property name="label" translatable="yes">Add All</property>
-                                    <property name="icon_name">list-add</property>
-                                    <property name="tooltip_text" translatable="yes">Add all audio tracks to the list</property>
-                                    <signal name="clicked" handler="audio_add_all_clicked_cb" swapped="no"/>
+                                    <property name="can_focus">False</property>
                                   </object>
                                   <packing>
-                                    <property name="expand">False</property>
+                                    <property name="position">3</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkToolButton" id="audio_reset">
+                                  <object class="GtkBox" id="audio_list_default_header">
+                                    <property name="orientation">horizontal</property>
                                     <property name="visible">True</property>
-                                    <property name="sensitive">True</property>
-                                    <property name="can_focus">True</property>
+                                    <property name="can_focus">False</property>
                                     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                    <property name="is_important">True</property>
-                                    <property name="label" translatable="yes">Reload Defaults</property>
-                                    <property name="icon_name">emblem-default</property>
-                                    <property name="tooltip_text" translatable="yes">Reload all audio settings from defaults</property>
-                                    <signal name="clicked" handler="audio_reset_clicked_cb" swapped="no"/>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                  </packing>
-                                </child>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkScrolledWindow" id="scrolledwindow5">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
-                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                <child>
-                                  <object class="GtkTreeView" id="audio_list_view">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                    <property name="headers_visible">False</property>
-                                    <property name="headers_clickable">False</property>
-                                    <child internal-child="selection">
-                                      <object class="GtkTreeSelection" id="treeview-selection1"/>
+                                    <child>
+                                      <object class="GtkLabel" id="audio_defaults_encoder_label">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="label" translatable="yes">Encoder</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">False</property>
+                                        <property name="position">0</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel" id="audio_defaults_bitrate_label">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="label" translatable="yes">Bitrate/Quality</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">False</property>
+                                        <property name="position">1</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel" id="audio_defaults_mixdown_label">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="label" translatable="yes">Mixdown</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">False</property>
+                                        <property name="position">2</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel" id="audio_defaults_samplerate_label">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="label" translatable="yes">Samplerate</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">False</property>
+                                        <property name="position">3</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel" id="audio_defaults_gain_label">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="label" translatable="yes">Gain</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">False</property>
+                                        <property name="position">4</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel" id="audio_defaults_drc_label">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="label" translatable="yes">DRC</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">False</property>
+                                        <property name="position">5</property>
+                                      </packing>
                                     </child>
                                   </object>
+                                  <packing>
+                                    <property name="position">4</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScrolledWindow" id="scrolledwindow12">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                    <property name="hexpand">True</property>
+                                    <child>
+                                      <object class="GtkListBox" id="audio_list_default">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">True</property>
+                                        <property name="vexpand">True</property>
+                                        <property name="selection_mode">none</property>
+                                        <property name="activate_on_single_click">False</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="position">5</property>
+                                  </packing>
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
-                                <property name="position">2</property>
+                                <property name="position">1</property>
+                                <property name="name">audio_selection_tab</property>
+                                <property name="title" translatable="yes">Track Selection</property>
                               </packing>
                             </child>
                           </object>
                           <packing>
                             <property name="expand">True</property>
                             <property name="fill">True</property>
-                            <property name="position">0</property>
+                            <property name="position">1</property>
                           </packing>
                         </child>
                       </object>
                       <packing>
-                        <property name="position">5</property>
-                        <property name="name">audio_list_tab</property>
-                        <property name="title" translatable="yes">Audio List</property>
+                        <property name="position">4</property>
+                        <property name="name">audio_tab</property>
+                        <property name="title" translatable="yes">Audio</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkBox" id="subtitle_defaults_tab">
+                      <object class="GtkBox" id="subtitle_tab">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="orientation">vertical</property>
-                        <property name="margin-start">12</property>
-                        <property name="margin-end">12</property>
+                        <property name="orientation">horizontal</property>
+                        <property name="margin-start">0</property>
+                        <property name="margin-end">0</property>
                         <property name="margin_top">12</property>
-                        <property name="margin_bottom">12</property>
+                        <property name="margin_bottom">0</property>
                         <property name="hexpand">True</property>
+                        <property name="vexpand">True</property>
+])dnl
+ifelse(eval(gtk_version < 316), 1, filter_output([
                         <child>
-                          <object class="GtkBox" id="subtitle_defaults_box1">
+                          <object class="GtkBox" id="subtitle_toggle_hbox">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="orientation">horizontal</property>
-                            <property name="spacing">6</property>
+                            <property name="hexpand">False</property>
+                            <property name="vexpand">True</property>
                             <child>
-                              <object class="GtkBox" id="subtitle_defaults_box2">
+                              <object class="GtkBox" id="subtitle_toggle_vbox">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="orientation">vertical</property>
+                                <property name="hexpand">False</property>
+                                <property name="vexpand">True</property>
                                 <child>
-                                  <object class="GtkGrid" id="sub_grid2">
+                                  <object class="GtkToggleButton" id="subtitle_list_toggle">
+                                    <property name="label" translatable="yes">Track List</property>
+                                    <property name="active">True</property>
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <property name="column_spacing">5</property>
-                                    <property name="row-spacing">2</property>
-                                    <child>
-                                      <object class="GtkLabel" id="sub_label4">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="halign">end</property>
-                                        <property name="label" translatable="yes">Selection Behavior:</property>
-                                        <property name="justify">right</property>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">0</property>
-                                        <property name="top_attach">0</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkComboBox" id="SubtitleTrackSelectionBehavior">
-                                        <property name="visible">True</property>
-                                        <property name="valign">GTK_ALIGN_CENTER</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="tooltip_text" translatable="yes">Choose which subtitle tracks of the source media are used.</property>
-                                        <signal name="changed" handler="subtitle_def_widget_changed_cb" swapped="no"/>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">1</property>
-                                        <property name="top_attach">0</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">Show Output Subtitle Track List</property>
+                                    <property name="receives_default">True</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="halign">fill</property>
+                                    <signal name="toggled" handler="subtitle_list_toggled_cb" swapped="no"/>
                                   </object>
                                   <packing>
-                                    <property name="fill">True</property>
                                     <property name="position">0</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkGrid" id="sub_grid3">
+                                  <object class="GtkToggleButton" id="subtitle_selection_toggle">
+                                    <property name="label" translatable="yes">Track Selection</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">Show Source Track Selection Options</property>
+                                    <property name="receives_default">True</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="halign">fill</property>
+                                    <signal name="toggled" handler="subtitle_selection_toggled_cb" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkSeparator" id="subtitle_separator">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                              </object>
+                              <packing>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+]), filter_output([
+                        <child>
+                          <object class="GtkStackSidebar" id="SubtitleStackSidebar">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                            <property name="stack">SubtitleStack</property>
+                            <property name="hexpand">False</property>
+                            <property name="vexpand">True</property>
+                            <property name="valign">GTK_ALIGN_FILL</property>
+                            <property name="halign">start</property>
+                          </object>
+                          <packing>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+]))dnl
+filter_output([
+                        <child>
+                          <object class="GtkStack" id="SubtitleStack">
+                            <property name="homogeneous">True</property>
+                            <property name="transition-type">GTK_STACK_TRANSITION_TYPE_SLIDE_LEFT_RIGHT</property>
+                            <property name="transition-duration">400</property>
+                            <property name="visible">True</property>
+                            <property name="hexpand">True</property>
+                            <property name="vexpand">True</property>
+                            <property name="can_focus">False</property>
+
+                            <property name="margin-top">0</property>
+                            <property name="margin-bottom">0</property>
+                            <property name="margin-start">12</property>
+                            <child>
+                              <object class="GtkBox" id="subtitle_list_tab">
+                                <property name="orientation">vertical</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                <child>
+                                  <object class="GtkBox" id="vbox12">
+                                    <property name="orientation">vertical</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="column_spacing">5</property>
-                                    <property name="row-spacing">2</property>
-                                    <property name="halign">GTK_ALIGN_END</property>
-                                    <property name="margin_top">6</property>
-                                    <property name="margin_bottom">6</property>
+                                    <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                    <property name="spacing">2</property>
+                                    <property name="margin-top">6</property>
+                                    <property name="margin-bottom">6</property>
+                                    <property name="margin-start">6</property>
+                                    <property name="margin-end">6</property>
                                     <child>
-                                      <object class="GtkScrolledWindow" id="sub_scrolledwindow10">
+                                      <object class="GtkToolbar" id="subtitle_toolbar">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                        <child>
+                                          <object class="GtkToolButton" id="subtitle_add">
+                                            <property name="visible">True</property>
+                                            <property name="sensitive">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="is_important">True</property>
+                                            <property name="label" translatable="yes">Add</property>
+                                            <property name="icon_name">list-add</property>
+                                            <property name="tooltip_text" translatable="yes">Add new subtitle settings to the list</property>
+                                            <signal name="clicked" handler="subtitle_add_clicked_cb" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkToolButton" id="subtitle_add_all">
+                                            <property name="visible">True</property>
+                                            <property name="sensitive">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="is_important">True</property>
+                                            <property name="label" translatable="yes">Add All</property>
+                                            <property name="icon_name">list-add</property>
+                                            <property name="tooltip_text" translatable="yes">Add all subtitle tracks to the list</property>
+                                            <signal name="clicked" handler="subtitle_add_all_clicked_cb" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkToolButton" id="subtitle_add_fas">
+                                            <property name="visible">True</property>
+                                            <property name="sensitive">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="is_important">True</property>
+                                            <property name="label" translatable="yes">Foreign Audio Search</property>
+                                            <property name="icon_name">list-add</property>
+                                            <property name="tooltip_text" translatable="yes">Add an extra pass to the encode which searches
+        for subtitle candidates that provide subtitles for
+        segments of the audio that are in a foreign language.</property>
+                                            <signal name="clicked" handler="subtitle_add_fas_clicked_cb" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkToolButton" id="subtitle_reset">
+                                            <property name="visible">True</property>
+                                            <property name="sensitive">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                            <property name="is_important">True</property>
+                                            <property name="label" translatable="yes">Reload</property>
+                                            <property name="icon_name">emblem-default</property>
+                                            <property name="tooltip_text" translatable="yes">Reload all subtitle settings from defaults</property>
+                                            <signal name="clicked" handler="subtitle_reset_clicked_cb" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                          </packing>
+                                        </child>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">0</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkScrolledWindow" id="scrolledwindow4">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
                                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                        <property name="min_content_height">108</property>
                                         <child>
-                                          <object class="GtkListBox" id="subtitle_avail_lang">
+                                          <object class="GtkTreeView" id="subtitle_list_view">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
+                                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                            <property name="headers_visible">False</property>
+                                            <property name="headers_clickable">False</property>
+                                            <child internal-child="selection">
+                                              <object class="GtkTreeSelection" id="treeview-selection2"/>
+                                            </child>
                                           </object>
                                         </child>
                                       </object>
                                       <packing>
-                                        <property name="left_attach">0</property>
-                                        <property name="top_attach">1</property>
-                                        <property name="width">1</property>
-                                        <property name="height">4</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkScrolledWindow" id="sub_scrolledwindow11">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
-                                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                        <child>
-                                          <object class="GtkListBox" id="subtitle_selected_lang">
-                                            <property name="visible">True</property>
-                                            <property name="can_focus">True</property>
-                                            <property name="tooltip_text" translatable="yes">Create a list of languages you would like to select subtitles for.
-Tracks matching these languages will be selected using the chosen Selection Behavior.
-
-The first language in this list is your "preferred" language and will be used
-for determining subtitle selection settings when there is foreign audio.</property>
-                                          </object>
-                                        </child>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">2</property>
-                                        <property name="top_attach">1</property>
-                                        <property name="width">1</property>
-                                        <property name="height">4</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkButton" id="subtitle_lang_add">
-                                        <property name="label" translatable="yes">Add</property>
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="receives_default">True</property>
-                                        <property name="valign">GTK_ALIGN_CENTER</property>
-                                        <signal name="clicked" handler="subtitle_add_lang_clicked_cb" swapped="no"/>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">1</property>
-                                        <property name="top_attach">2</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkButton" id="subtitle_lang_remove">
-                                        <property name="label" translatable="yes">Remove</property>
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="receives_default">True</property>
-                                        <property name="valign">GTK_ALIGN_CENTER</property>
-                                        <signal name="clicked" handler="subtitle_remove_lang_clicked_cb" swapped="no"/>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">1</property>
-                                        <property name="top_attach">3</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkLabel" id="sub_label8">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="label" translatable="yes">Available Languages</property>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">0</property>
-                                        <property name="top_attach">0</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkLabel" id="sub_label24">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="label" translatable="yes">Selected Languages</property>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">2</property>
-                                        <property name="top_attach">0</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkLabel" id="subtitle_preferred_language">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="halign">end</property>
-                                        <property name="label" translatable="yes">Preferred Language: None</property>
-                                        <property name="justify">right</property>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">3</property>
-                                        <property name="top_attach">1</property>
-                                        <property name="width">1</property>
-                                        <property name="height">1</property>
+                                        <property name="expand">True</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">1</property>
                                       </packing>
                                     </child>
                                   </object>
                                   <packing>
                                     <property name="expand">True</property>
                                     <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="position">0</property>
+                                <property name="name">subtitle_list_tab</property>
+                                <property name="title" translatable="yes">Track List</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkBox" id="subtitle_selection_tab">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="orientation">vertical</property>
+                                <property name="margin-start">12</property>
+                                <property name="margin-end">12</property>
+                                <property name="margin_top">12</property>
+                                <property name="margin_bottom">12</property>
+                                <property name="hexpand">True</property>
+                                <child>
+                                  <object class="GtkBox" id="subtitle_selection_box1">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="orientation">horizontal</property>
+                                    <property name="spacing">6</property>
+                                    <child>
+                                      <object class="GtkBox" id="subtitle_selection_box2">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="orientation">vertical</property>
+                                        <child>
+                                          <object class="GtkGrid" id="sub_grid2">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">False</property>
+                                            <property name="column_spacing">5</property>
+                                            <property name="row-spacing">2</property>
+                                            <child>
+                                              <object class="GtkLabel" id="sub_label4">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="halign">end</property>
+                                                <property name="label" translatable="yes">Selection Behavior:</property>
+                                                <property name="justify">right</property>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">0</property>
+                                                <property name="top_attach">0</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkComboBox" id="SubtitleTrackSelectionBehavior">
+                                                <property name="visible">True</property>
+                                                <property name="valign">GTK_ALIGN_CENTER</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="tooltip_text" translatable="yes">Choose which subtitle tracks of the source media are used.</property>
+                                                <signal name="changed" handler="subtitle_def_widget_changed_cb" swapped="no"/>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">1</property>
+                                                <property name="top_attach">0</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                          </object>
+                                          <packing>
+                                            <property name="fill">True</property>
+                                            <property name="position">0</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkGrid" id="sub_grid3">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">False</property>
+                                            <property name="column_spacing">5</property>
+                                            <property name="row-spacing">2</property>
+                                            <property name="halign">GTK_ALIGN_END</property>
+                                            <property name="margin_top">6</property>
+                                            <property name="margin_bottom">6</property>
+                                            <child>
+                                              <object class="GtkScrolledWindow" id="sub_scrolledwindow10">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
+                                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                                <property name="min_content_height">108</property>
+                                                <child>
+                                                  <object class="GtkListBox" id="subtitle_avail_lang">
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">True</property>
+                                                  </object>
+                                                </child>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">0</property>
+                                                <property name="top_attach">1</property>
+                                                <property name="width">1</property>
+                                                <property name="height">4</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkScrolledWindow" id="sub_scrolledwindow11">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
+                                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                                <child>
+                                                  <object class="GtkListBox" id="subtitle_selected_lang">
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">True</property>
+                                                    <property name="tooltip_text" translatable="yes">Create a list of languages you would like to select subtitles for.
+        Tracks matching these languages will be selected using the chosen Selection Behavior.
+
+        The first language in this list is your "preferred" language and will be used
+        for determining subtitle selection settings when there is foreign audio.</property>
+                                                  </object>
+                                                </child>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">2</property>
+                                                <property name="top_attach">1</property>
+                                                <property name="width">1</property>
+                                                <property name="height">4</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkButton" id="subtitle_lang_add">
+                                                <property name="label" translatable="yes">Add</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">True</property>
+                                                <property name="valign">GTK_ALIGN_CENTER</property>
+                                                <signal name="clicked" handler="subtitle_add_lang_clicked_cb" swapped="no"/>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">1</property>
+                                                <property name="top_attach">2</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkButton" id="subtitle_lang_remove">
+                                                <property name="label" translatable="yes">Remove</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">True</property>
+                                                <property name="valign">GTK_ALIGN_CENTER</property>
+                                                <signal name="clicked" handler="subtitle_remove_lang_clicked_cb" swapped="no"/>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">1</property>
+                                                <property name="top_attach">3</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkLabel" id="sub_label8">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="label" translatable="yes">Available Languages</property>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">0</property>
+                                                <property name="top_attach">0</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkLabel" id="sub_label24">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="label" translatable="yes">Selected Languages</property>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">2</property>
+                                                <property name="top_attach">0</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkLabel" id="subtitle_preferred_language">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="halign">end</property>
+                                                <property name="label" translatable="yes">Preferred Language: None</property>
+                                                <property name="justify">right</property>
+                                              </object>
+                                              <packing>
+                                                <property name="left_attach">3</property>
+                                                <property name="top_attach">1</property>
+                                                <property name="width">1</property>
+                                                <property name="height">1</property>
+                                              </packing>
+                                            </child>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">True</property>
+                                            <property name="fill">True</property>
+                                            <property name="position">1</property>
+                                          </packing>
+                                        </child>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">0</property>
+                                      </packing>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkCheckButton" id="SubtitleAddForeignAudioSearch">
+                                    <property name="label" translatable="yes">Add Foreign Audio Search Pass</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">False</property>
+                                    <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                    <property name="tooltip_text" translatable="yes">Add "Foreign Audio Search" when the default audio track is your preferred language.
+        This search pass finds short sequences of foreign audio and provides subtitles for them.
+
+        This option requires a language to be set in the Selected Languages list.</property>
+                                    <property name="halign">start</property>
+                                    <property name="active">True</property>
+                                    <property name="draw_indicator">True</property>
+                                    <signal name="toggled" handler="subtitle_def_widget_changed_cb" swapped="no"/>
+                                  </object>
+                                  <packing>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkCheckButton" id="SubtitleAddForeignAudioSearch">
-                            <property name="label" translatable="yes">Add Foreign Audio Search Pass</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">False</property>
-                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="tooltip_text" translatable="yes">Add "Foreign Audio Search" when the default audio track is your preferred language.
-This search pass finds short sequences of foreign audio and provides subtitles for them.
-
-This option requires a language to be set in the Selected Languages list.</property>
-                            <property name="halign">start</property>
-                            <property name="active">True</property>
-                            <property name="draw_indicator">True</property>
-                            <signal name="toggled" handler="subtitle_def_widget_changed_cb" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkCheckButton" id="SubtitleAddForeignAudioSubtitle">
-                            <property name="label" translatable="yes">Add subtitle track if default audio is foreign</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">False</property>
-                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="tooltip_text" translatable="yes">When the default audio track is not your preferred language, add a subtitle track.
-
-This option requires a language to be set in the Selected Languages list.</property>
-                            <property name="halign">start</property>
-                            <property name="active">True</property>
-                            <property name="draw_indicator">True</property>
-                            <signal name="toggled" handler="subtitle_def_widget_changed_cb" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="position">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkCheckButton" id="SubtitleAddCC">
-                            <property name="label" translatable="yes">Add Closed Captions when available</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">False</property>
-                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="tooltip_text" translatable="yes">Closed captions are text subtitles that can be added to any container as a soft subtitle track</property>
-                            <property name="halign">start</property>
-                            <property name="draw_indicator">True</property>
-                            <signal name="toggled" handler="subtitle_def_widget_changed_cb" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="position">3</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkBox" id="subtitle_burn_box">
-                            <property name="orientation">horizontal</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="spacing">4</property>
-                            <child>
-                              <object class="GtkLabel" id="sub_burn_behavior_label">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="halign">end</property>
-                                <property name="label" translatable="yes">Burn-In Behavior*:</property>
-                                <property name="justify">right</property>
-                              </object>
-                              <packing>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkComboBox" id="SubtitleBurnBehavior">
-                                <property name="visible">True</property>
-                                <property name="valign">GTK_ALIGN_CENTER</property>
-                                <property name="can_focus">False</property>
-                                <property name="tooltip_text" translatable="yes">Set the behavior of subtitle "Burn-In".
-
-Burned-In subtitles are part of the video and can not be disabled during playback.
-Only one subtitle track can be burned! Since conflicts can occur, the first chosen wins.</property>
-                                <signal name="changed" handler="subtitle_def_widget_changed_cb" swapped="no"/>
-                              </object>
-                              <packing>
-                                <property name="position">1</property>
-                              </packing>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="position">4</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkBox" id="subtitle_additional_burn_box">
-                            <property name="orientation">horizontal</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="spacing">4</property>
-                            <child>
-                              <object class="GtkLabel" id="sub_additional_burn_label">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="halign">end</property>
-                                <property name="label" translatable="yes">Burn-In for deficient players*:</property>
-                                <property name="justify">right</property>
-                              </object>
-                              <packing>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkCheckButton" id="SubtitleBurnDVDSub">
-                                <property name="label" translatable="yes">DVD Subtitles</property>
-                                <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="receives_default">False</property>
-                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                <property name="tooltip_text" translatable="yes">Burn the first selected DVD subtitle track. All other DVD subtitle tracks will be discarded.
-Use this option if your player software or device does not support DVD subtitles.
-
-Only one subtitle track can be burned! Since conflicts can occur, the first chosen wins.</property>
-                                <property name="halign">start</property>
-                                <property name="draw_indicator">True</property>
-                                <signal name="toggled" handler="subtitle_def_widget_changed_cb" swapped="no"/>
-                              </object>
-                              <packing>
-                                <property name="position">1</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkCheckButton" id="SubtitleBurnBDSub">
-                                <property name="label" translatable="yes">Blu-ray Subtitles</property>
-                                <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="receives_default">False</property>
-                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                <property name="tooltip_text" translatable="yes">Burn the first selected Blu-ray subtitle track. All other Blu-ray subtitle tracks will be discarded.
-Use this option if your player software or device does not support Blu-ray subtitles.
-
-Only one subtitle track can be burned! Since conflicts can occur, the first chosen wins.</property>
-                                <property name="halign">start</property>
-                                <property name="draw_indicator">True</property>
-                                <signal name="toggled" handler="subtitle_def_widget_changed_cb" swapped="no"/>
-                              </object>
-                              <packing>
-                                <property name="position">2</property>
-                              </packing>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="position">5</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="sub_burn_warning_label">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="halign">start</property>
-                            <property name="label" translatable="yes">&lt;small&gt;* Only one of the above subtitle burn options will be applied, starting with the top.&lt;/small&gt;</property>
-                            <property name="tooltip_text" translatable="yes">Only one subtitle track can be burned! Since conflicts can occur, the first chosen wins.</property>
-                            <property name="use_markup">True</property>
-                            <property name="justify">left</property>
-                          </object>
-                          <packing>
-                            <property name="position">6</property>
-                          </packing>
-                        </child>
-                      </object>
-                      <packing>
-                        <property name="position">6</property>
-                        <property name="name">subtitle_defaults_tab</property>
-                        <property name="title" translatable="yes">Subtitle Defaults</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkBox" id="subtitle_list_tab">
-                        <property name="orientation">vertical</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                        <child>
-                          <object class="GtkBox" id="vbox12">
-                            <property name="orientation">vertical</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="spacing">2</property>
-                            <property name="margin-top">6</property>
-                            <property name="margin-bottom">6</property>
-                            <property name="margin-start">6</property>
-                            <property name="margin-end">6</property>
-                            <child>
-                              <object class="GtkToolbar" id="subtitle_toolbar">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                                 <child>
-                                  <object class="GtkToolButton" id="subtitle_add">
+                                  <object class="GtkCheckButton" id="SubtitleAddForeignAudioSubtitle">
+                                    <property name="label" translatable="yes">Add subtitle track if default audio is foreign</property>
                                     <property name="visible">True</property>
-                                    <property name="sensitive">True</property>
                                     <property name="can_focus">True</property>
-                                    <property name="is_important">True</property>
-                                    <property name="label" translatable="yes">Add</property>
-                                    <property name="icon_name">list-add</property>
-                                    <property name="tooltip_text" translatable="yes">Add new subtitle settings to the list</property>
-                                    <signal name="clicked" handler="subtitle_add_clicked_cb" swapped="no"/>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkToolButton" id="subtitle_add_all">
-                                    <property name="visible">True</property>
-                                    <property name="sensitive">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="is_important">True</property>
-                                    <property name="label" translatable="yes">Add All</property>
-                                    <property name="icon_name">list-add</property>
-                                    <property name="tooltip_text" translatable="yes">Add all subtitle tracks to the list</property>
-                                    <signal name="clicked" handler="subtitle_add_all_clicked_cb" swapped="no"/>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkToolButton" id="subtitle_add_fas">
-                                    <property name="visible">True</property>
-                                    <property name="sensitive">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="is_important">True</property>
-                                    <property name="label" translatable="yes">Foreign Audio Search</property>
-                                    <property name="icon_name">list-add</property>
-                                    <property name="tooltip_text" translatable="yes">Add an extra pass to the encode which searches
-for subtitle candidates that provide subtitles for
-segments of the audio that are in a foreign language.</property>
-                                    <signal name="clicked" handler="subtitle_add_fas_clicked_cb" swapped="no"/>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkToolButton" id="subtitle_reset">
-                                    <property name="visible">True</property>
-                                    <property name="sensitive">True</property>
-                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">False</property>
                                     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                    <property name="is_important">True</property>
-                                    <property name="label" translatable="yes">Reload Defaults</property>
-                                    <property name="icon_name">emblem-default</property>
-                                    <property name="tooltip_text" translatable="yes">Reload all subtitle settings from defaults</property>
-                                    <signal name="clicked" handler="subtitle_reset_clicked_cb" swapped="no"/>
+                                    <property name="tooltip_text" translatable="yes">When the default audio track is not your preferred language, add a subtitle track.
+
+        This option requires a language to be set in the Selected Languages list.</property>
+                                    <property name="halign">start</property>
+                                    <property name="active">True</property>
+                                    <property name="draw_indicator">True</property>
+                                    <signal name="toggled" handler="subtitle_def_widget_changed_cb" swapped="no"/>
                                   </object>
                                   <packing>
-                                    <property name="expand">False</property>
+                                    <property name="position">2</property>
                                   </packing>
                                 </child>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkScrolledWindow" id="scrolledwindow4">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
-                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                                 <child>
-                                  <object class="GtkTreeView" id="subtitle_list_view">
+                                  <object class="GtkCheckButton" id="SubtitleAddCC">
+                                    <property name="label" translatable="yes">Add Closed Captions when available</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
+                                    <property name="receives_default">False</property>
                                     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                                    <property name="headers_visible">False</property>
-                                    <property name="headers_clickable">False</property>
-                                    <child internal-child="selection">
-                                      <object class="GtkTreeSelection" id="treeview-selection2"/>
+                                    <property name="tooltip_text" translatable="yes">Closed captions are text subtitles that can be added to any container as a soft subtitle track</property>
+                                    <property name="halign">start</property>
+                                    <property name="draw_indicator">True</property>
+                                    <signal name="toggled" handler="subtitle_def_widget_changed_cb" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="position">3</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkBox" id="subtitle_burn_box">
+                                    <property name="orientation">horizontal</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                    <property name="spacing">4</property>
+                                    <child>
+                                      <object class="GtkLabel" id="sub_burn_behavior_label">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="halign">end</property>
+                                        <property name="label" translatable="yes">Burn-In Behavior*:</property>
+                                        <property name="justify">right</property>
+                                      </object>
+                                      <packing>
+                                        <property name="position">0</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkComboBox" id="SubtitleBurnBehavior">
+                                        <property name="visible">True</property>
+                                        <property name="valign">GTK_ALIGN_CENTER</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="tooltip_text" translatable="yes">Set the behavior of subtitle "Burn-In".
+
+        Burned-In subtitles are part of the video and can not be disabled during playback.
+        Only one subtitle track can be burned! Since conflicts can occur, the first chosen wins.</property>
+                                        <signal name="changed" handler="subtitle_def_widget_changed_cb" swapped="no"/>
+                                      </object>
+                                      <packing>
+                                        <property name="position">1</property>
+                                      </packing>
                                     </child>
                                   </object>
+                                  <packing>
+                                    <property name="position">4</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkBox" id="subtitle_additional_burn_box">
+                                    <property name="orientation">horizontal</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                    <property name="spacing">4</property>
+                                    <child>
+                                      <object class="GtkLabel" id="sub_additional_burn_label">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="halign">end</property>
+                                        <property name="label" translatable="yes">Burn-In for deficient players*:</property>
+                                        <property name="justify">right</property>
+                                      </object>
+                                      <packing>
+                                        <property name="position">0</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkCheckButton" id="SubtitleBurnDVDSub">
+                                        <property name="label" translatable="yes">DVD Subtitles</property>
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">True</property>
+                                        <property name="receives_default">False</property>
+                                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                        <property name="tooltip_text" translatable="yes">Burn the first selected DVD subtitle track. All other DVD subtitle tracks will be discarded.
+        Use this option if your player software or device does not support DVD subtitles.
+
+        Only one subtitle track can be burned! Since conflicts can occur, the first chosen wins.</property>
+                                        <property name="halign">start</property>
+                                        <property name="draw_indicator">True</property>
+                                        <signal name="toggled" handler="subtitle_def_widget_changed_cb" swapped="no"/>
+                                      </object>
+                                      <packing>
+                                        <property name="position">1</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkCheckButton" id="SubtitleBurnBDSub">
+                                        <property name="label" translatable="yes">Blu-ray Subtitles</property>
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">True</property>
+                                        <property name="receives_default">False</property>
+                                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                        <property name="tooltip_text" translatable="yes">Burn the first selected Blu-ray subtitle track. All other Blu-ray subtitle tracks will be discarded.
+        Use this option if your player software or device does not support Blu-ray subtitles.
+
+        Only one subtitle track can be burned! Since conflicts can occur, the first chosen wins.</property>
+                                        <property name="halign">start</property>
+                                        <property name="draw_indicator">True</property>
+                                        <signal name="toggled" handler="subtitle_def_widget_changed_cb" swapped="no"/>
+                                      </object>
+                                      <packing>
+                                        <property name="position">2</property>
+                                      </packing>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="position">5</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="sub_burn_warning_label">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="halign">start</property>
+                                    <property name="label" translatable="yes">&lt;small&gt;* Only one of the above subtitle burn options will be applied, starting with the top.&lt;/small&gt;</property>
+                                    <property name="tooltip_text" translatable="yes">Only one subtitle track can be burned! Since conflicts can occur, the first chosen wins.</property>
+                                    <property name="use_markup">True</property>
+                                    <property name="justify">left</property>
+                                  </object>
+                                  <packing>
+                                    <property name="position">6</property>
+                                  </packing>
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
                                 <property name="position">1</property>
+                                <property name="name">subtitle_defaults_tab</property>
+                                <property name="title" translatable="yes">Track Selection</property>
                               </packing>
                             </child>
                           </object>
                           <packing>
                             <property name="expand">True</property>
                             <property name="fill">True</property>
-                            <property name="position">0</property>
+                            <property name="position">1</property>
                           </packing>
                         </child>
                       </object>
                       <packing>
-                        <property name="position">7</property>
-                        <property name="name">subtitle_list_tab</property>
-                        <property name="title" translatable="yes">Subtitle List</property>
+                        <property name="position">5</property>
+                        <property name="name">subtitle_tab</property>
+                        <property name="title" translatable="yes">Subtitles</property>
                       </packing>
                     </child>
                     <child>
@@ -6217,7 +6615,7 @@ no-fast-pskip=0:no-dct-decimate=0:cabac=1</property>
                         </child>
                       </object>
                       <packing>
-                        <property name="position">8</property>
+                        <property name="position">6</property>
                         <property name="name">advanced_video_tab</property>
                         <property name="title" translatable="yes">Advanced Video</property>
                       </packing>
@@ -6249,12 +6647,6 @@ no-fast-pskip=0:no-dct-decimate=0:cabac=1</property>
                                 <property name="fill">True</property>
                                 <property name="position">0</property>
                               </packing>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
                             </child>
                           </object>
                           <packing>
@@ -6288,7 +6680,7 @@ no-fast-pskip=0:no-dct-decimate=0:cabac=1</property>
                         </child>
                       </object>
                       <packing>
-                        <property name="position">9</property>
+                        <property name="position">7</property>
                         <property name="name">chapters_tab</property>
                         <property name="title" translatable="yes">Chapters</property>
                       </packing>
@@ -6298,8 +6690,8 @@ no-fast-pskip=0:no-dct-decimate=0:cabac=1</property>
                         <property name="row-spacing">2</property>
                         <property name="margin-top">6</property>
                         <property name="margin-bottom">6</property>
-                        <property name="margin-start">24</property>
-                        <property name="margin-end">24</property>
+                        <property name="margin-start">0</property>
+                        <property name="margin-end">0</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -6606,7 +6998,7 @@ no-fast-pskip=0:no-dct-decimate=0:cabac=1</property>
                         </child>
                       </object>
                       <packing>
-                        <property name="position">10</property>
+                        <property name="position">8</property>
                         <property name="name">metadata_tab</property>
                         <property name="title" translatable="yes">Tags</property>
                       </packing>
@@ -6763,8 +7155,6 @@ This file may be reloaded at a later time to edit your jobs and re-encode.</prop
                     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                     <child>
                       <object class="GtkTreeView" id="queue_list">
-                        <property name="width_request">900</property>
-                        <property name="height_request">300</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -7534,6 +7924,84 @@ This file may be reloaded at a later time to edit your jobs and re-encode.</prop
                           </packing>
                         </child>
                         <child>
+                          <object class="GtkBox" id="DiskFreeBox">
+                            <property name="orientation">vertical</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="spacing">2</property>
+                            <child>
+                              <object class="GtkCheckButton" id="DiskFreeCheck">
+                                <property name="label" translatable="yes">Monitor destination disk free space</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">False</property>
+                                <property name="tooltip_text" translatable="yes">Pause encoding if free disk space drops below limit</property>
+                                <property name="halign">start</property>
+                                <property name="draw_indicator">True</property>
+                                <signal name="toggled" handler="pref_changed_cb" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkBox" id="DiskFreeLimitBox">
+                                <property name="orientation">horizontal</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="spacing">4</property>
+                                <property name="margin-start">21</property>
+                                <child>
+                                  <object class="GtkSpinButton" id="DiskFreeLimit">
+                                    <property name="width-chars">7</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                                    <property name="tooltip_text" translatable="yes">Pause encoding if free disk space drops below limit</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="valign">GTK_ALIGN_CENTER</property>
+                                    <property name="adjustment">DiskFreeLimitAdjustment</property>
+                                    <property name="width_request">55</property>
+                                    <signal name="value-changed" handler="pref_changed_cb" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="DiskFreeLimitLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="halign">start</property>
+                                    <property name="label" translatable="yes">MB Limit</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="top_attach">2</property>
+                            <property name="left_attach">0</property>
+                            <property name="width">1</property>
+                            <property name="height">1</property>
+                          </packing>
+                        </child>
+                        <child>
                           <object class="GtkBox" id="vbox2">
                             <property name="orientation">vertical</property>
                             <property name="visible">True</property>
@@ -7638,7 +8106,7 @@ This file may be reloaded at a later time to edit your jobs and re-encode.</prop
                             </child>
                           </object>
                           <packing>
-                            <property name="top_attach">2</property>
+                            <property name="top_attach">3</property>
                             <property name="left_attach">0</property>
                             <property name="width">1</property>
                             <property name="height">1</property>
@@ -7655,7 +8123,7 @@ This file may be reloaded at a later time to edit your jobs and re-encode.</prop
                             <signal name="toggled" handler="pref_changed_cb" swapped="no"/>
                           </object>
                           <packing>
-                            <property name="top_attach">3</property>
+                            <property name="top_attach">4</property>
                             <property name="left_attach">0</property>
                             <property name="width">1</property>
                             <property name="height">1</property>
@@ -7673,7 +8141,7 @@ This file may be reloaded at a later time to edit your jobs and re-encode.</prop
                             <signal name="toggled" handler="pref_changed_cb" swapped="no"/>
                           </object>
                           <packing>
-                            <property name="top_attach">4</property>
+                            <property name="top_attach">5</property>
                             <property name="left_attach">0</property>
                             <property name="width">1</property>
                             <property name="height">1</property>
@@ -7693,7 +8161,7 @@ on the Video tab instead.</property>
                             <signal name="toggled" handler="advanced_video_changed_cb" swapped="no"/>
                           </object>
                           <packing>
-                            <property name="top_attach">5</property>
+                            <property name="top_attach">6</property>
                             <property name="left_attach">0</property>
                             <property name="width">1</property>
                             <property name="height">1</property>
@@ -7712,7 +8180,7 @@ Check this if you want the queue to clean itself up by deleting completed jobs.<
                             <signal name="toggled" handler="pref_changed_cb" swapped="no"/>
                           </object>
                           <packing>
-                            <property name="top_attach">6</property>
+                            <property name="top_attach">7</property>
                             <property name="left_attach">0</property>
                             <property name="width">1</property>
                             <property name="height">1</property>

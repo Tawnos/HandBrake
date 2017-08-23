@@ -23,6 +23,7 @@ namespace HandBrakeWPF.ViewModels
     using HandBrakeWPF.Services.Interfaces;
     using HandBrakeWPF.Services.Queue.Interfaces;
     using HandBrakeWPF.Services.Queue.Model;
+    using HandBrakeWPF.Utilities;
     using HandBrakeWPF.ViewModels.Interfaces;
 
     using Microsoft.Win32;
@@ -371,10 +372,18 @@ namespace HandBrakeWPF.ViewModels
         /// </summary>
         public void StartQueue()
         {
-            if (this.queueProcessor.Count == 0)
+            if (this.queueProcessor.Count == 0 || !this.QueueTasks.Any(a => a.Status == QueueItemStatus.Waiting || a.Status == QueueItemStatus.InProgress))
             {
                 this.errorService.ShowMessageBox(
                     Resources.QueueViewModel_NoPendingJobs, Resources.Error, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var firstOrDefault = this.QueueTasks.FirstOrDefault(s => s.Status == QueueItemStatus.Waiting);
+            if (firstOrDefault != null && !DriveUtilities.HasMinimumDiskSpace(firstOrDefault.Task.Destination,
+                    this.userSettingService.GetUserSetting<long>(UserSettingConstants.PauseOnLowDiskspaceLevel)))
+            {
+                this.errorService.ShowMessageBox(Resources.Main_LowDiskspace, Resources.Error, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -392,22 +401,15 @@ namespace HandBrakeWPF.ViewModels
         {
             SaveFileDialog dialog = new SaveFileDialog
                 {
-                    Filter = "Legacy Queue Files (*.hbq)|*.hbq|Json for CLI (*.json)|*.json", 
+                    Filter = "Json (*.json)|*.json", 
                     OverwritePrompt = true, 
-                    DefaultExt = ".hbq", 
+                    DefaultExt = ".json", 
                     AddExtension = true
                 };
 
             if (dialog.ShowDialog() == true)
             {
-                if (Path.GetExtension(dialog.FileName).ToLower().Trim() == ".json")
-                {
-                    this.queueProcessor.ExportJson(dialog.FileName);
-                }
-                else
-                {
-                    this.queueProcessor.BackupQueue(dialog.FileName);
-                }
+                this.queueProcessor.ExportJson(dialog.FileName);
             }
         }
 
@@ -416,7 +418,7 @@ namespace HandBrakeWPF.ViewModels
         /// </summary>
         public void Import()
         {
-            OpenFileDialog dialog = new OpenFileDialog { Filter = "Legacy Queue Files (*.hbq)|*.hbq", CheckFileExists = true };
+            OpenFileDialog dialog = new OpenFileDialog { Filter = "Json (*.json)|*.json", CheckFileExists = true };
             if (dialog.ShowDialog() == true)
             {
                 this.queueProcessor.RestoreQueue(dialog.FileName);
@@ -459,6 +461,7 @@ namespace HandBrakeWPF.ViewModels
             this.queueProcessor.QueueCompleted += this.queueProcessor_QueueCompleted;
             this.queueProcessor.QueueChanged += this.QueueManager_QueueChanged;
             this.queueProcessor.JobProcessingStarted += this.QueueProcessorJobProcessingStarted;
+            this.queueProcessor.QueuePaused += this.QueueProcessor_QueuePaused;
         }
 
         public void Deactivate()
@@ -466,6 +469,7 @@ namespace HandBrakeWPF.ViewModels
             this.queueProcessor.QueueCompleted -= this.queueProcessor_QueueCompleted;
             this.queueProcessor.QueueChanged -= this.QueueManager_QueueChanged;
             this.queueProcessor.JobProcessingStarted -= this.QueueProcessorJobProcessingStarted;
+            this.queueProcessor.QueuePaused -= this.QueueProcessor_QueuePaused;
         }
 
         /// <summary>
@@ -480,7 +484,7 @@ namespace HandBrakeWPF.ViewModels
             this.queueProcessor.EncodeService.EncodeStatusChanged += this.EncodeService_EncodeStatusChanged;
             this.queueProcessor.EncodeService.EncodeCompleted += this.EncodeService_EncodeCompleted;
             this.queueProcessor.JobProcessingStarted += this.QueueProcessorJobProcessingStarted;
-            this.queueProcessor.LowDiskspaceDetected += this.QueueProcessor_LowDiskspaceDetected;
+            this.queueProcessor.QueuePaused += this.QueueProcessor_QueuePaused;
 
             this.JobsPending = string.Format(Resources.QueueViewModel_JobsPending, this.queueProcessor.Count);
             this.JobStatus = Resources.QueueViewModel_QueueReady;
@@ -501,7 +505,7 @@ namespace HandBrakeWPF.ViewModels
             this.queueProcessor.EncodeService.EncodeStatusChanged -= this.EncodeService_EncodeStatusChanged;
             this.queueProcessor.EncodeService.EncodeCompleted -= this.EncodeService_EncodeCompleted;
             this.queueProcessor.JobProcessingStarted -= this.QueueProcessorJobProcessingStarted;
-            this.queueProcessor.LowDiskspaceDetected -= this.QueueProcessor_LowDiskspaceDetected;
+            this.queueProcessor.QueuePaused -= this.QueueProcessor_QueuePaused;
 
             base.OnDeactivate(close);
         }
@@ -519,40 +523,39 @@ namespace HandBrakeWPF.ViewModels
         {
             Execute.OnUIThread(() =>
             {
-                this.JobStatus =
-                    string.Format(
-                        Resources.QueueViewModel_QueueStatusDisplay, 
-                        e.Task, 
-                        e.TaskCount, 
-                        e.PercentComplete, 
-                        e.CurrentFrameRate, 
-                        e.AverageFrameRate, 
-                        e.EstimatedTimeLeft, 
-                        e.ElapsedTime);
-            });
-        }
-
-        /// <summary>
-        /// Detect Low Disk Space before starting new queue tasks.
-        /// </summary>
-        /// <param name="sender">Event invoker. </param>
-        /// <param name="e">Event Args.</param>
-        private void QueueProcessor_LowDiskspaceDetected(object sender, EventArgs e)
-        {
-            Execute.OnUIThreadAsync(
-                () =>
+                string jobsPending = string.Format(Resources.Main_JobsPending_addon, this.queueProcessor.Count);
+                if (e.IsSubtitleScan)
                 {
-                    this.queueProcessor.Pause();
-                    this.JobStatus = Resources.QueueViewModel_QueuePending;
-                    this.JobsPending = string.Format(Resources.QueueViewModel_JobsPending, this.queueProcessor.Count);
-                    this.IsQueueRunning = false;
-
-                    this.errorService.ShowMessageBox(
-                        Resources.MainViewModel_LowDiskSpaceWarning,
-                        Resources.MainViewModel_LowDiskSpace,
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
-                });
+                    this.JobStatus = string.Format(Resources.MainViewModel_EncodeStatusChanged_SubScan_StatusLabel,
+                        e.Task,
+                        e.TaskCount,
+                        e.PercentComplete,
+                        e.EstimatedTimeLeft,
+                        e.ElapsedTime,
+                        jobsPending);
+                }
+                else if (e.IsMuxing)
+                {
+                    this.JobStatus = ResourcesUI.MainView_Muxing;
+                }
+                else if (e.IsSearching)
+                {
+                    this.JobStatus = string.Format(ResourcesUI.MainView_ProgressStatusWithTask, ResourcesUI.MainView_Searching, e.PercentComplete, e.EstimatedTimeLeft, jobsPending);
+                }
+                else
+                {
+                    this.JobStatus =
+                        string.Format(Resources.MainViewModel_EncodeStatusChanged_StatusLabel,
+                            e.Task,
+                            e.TaskCount,
+                            e.PercentComplete,
+                            e.CurrentFrameRate,
+                            e.AverageFrameRate,
+                            e.EstimatedTimeLeft,
+                            e.ElapsedTime,
+                            jobsPending);
+                }
+            });
         }
 
         /// <summary>
@@ -622,6 +625,13 @@ namespace HandBrakeWPF.ViewModels
             this.JobStatus = Resources.QueueViewModel_QueueStarted;
             this.JobsPending = string.Format(Resources.QueueViewModel_JobsPending, this.queueProcessor.Count);
             this.IsQueueRunning = true; 
+        }
+
+        private void QueueProcessor_QueuePaused(object sender, EventArgs e)
+        {
+            this.JobStatus = Resources.QueueViewModel_QueuePaused;
+            this.JobsPending = string.Format(Resources.QueueViewModel_JobsPending, this.queueProcessor.Count);
+            this.IsQueueRunning = false;
         }
 
         #endregion

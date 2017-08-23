@@ -63,7 +63,7 @@ namespace HandBrakeWPF.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Custom Denoise parameters.
         /// 
-        ///NLMeans syntax: y-strength=y:y-origin-tune=y:y-patch-size=y:y-range=y:y-frame-count=y:y-prefilter=y:cb-strength=c:cb-origin-tune=c:cb-patch-size=c:cb-range=c:cb-frame-count=c:cb-prefilter=c:cr-strength=c:cr-origin-tune=c:cr-patch-size=c:cr-range=c:cr-frame-count=c:cr-prefilter=c
+        ///NLMeans syntax: y-strength=y:y-origin-tune=y:y-patch-size=y:y-range=y:y-frame-count=y:y-prefilter=y:cb-strength=c:cb-origin-tune=c:cb-patch-size=c:cb-range=c:cb-frame-count=c:cb-prefilter=c:cr-strength=c:cr-origin-tune=c:cr-patch-size=c:cr-range=c:cr-frame-count=c:cr-prefilter=c:threads=t
         ///
         ///NLMeans default: y-strength=6:y-origin-tune=1:y-patch-size=7:y-range=3:y-frame-count=2:y-prefilter=0:cb-strength=6:cb-origin-tune=1:cb-patch-size=7:cb-range=3:cb-frame-count=2:cb-prefilter=0
         ///
@@ -72,6 +72,23 @@ namespace HandBrakeWPF.Properties {
         public static string FilterView_CustomDenoiseParams {
             get {
                 return ResourceManager.GetString("FilterView_CustomDenoiseParams", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Custom Sharpen parameters.
+        ///
+        ///Unsharp syntax: y-strength=y:y-size=y:cb-strength=c:cb-size=c:cr-strength=c:cr-size=c
+        ///
+        ///Unsharp default: y-strength=0.25:y-size=7:cb-strength=0.25:cb-size=7
+        ///
+        ///Lapsharp syntax: y-strength=y:y-kernel=y:cb-strength=c:cb-kernel=c:cr-strength=c:cr-kernel=c
+        ///
+        ///Lapsharp default: y-strength=0.2:y-kernel=isolap:cb-strength=0.2:cb-kernel=isolap.
+        /// </summary>
+        public static string FilterView_CustomSharpenParams {
+            get {
+                return ResourceManager.GetString("FilterView_CustomSharpenParams", resourceCulture);
             }
         }
         
@@ -249,11 +266,57 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sharpening enhances the appearance of detail, especially edges. Overly strong Sharpen settings may damage picture quality by creating ringing artifacts and enhancing noise, which can reduce compression efficiency.
+        ///
+        ///Unsharp is a general purpose unsharp masking filter. It sharpens by blurring, then calculating the difference between the blurred picture and the original.
+        ///
+        ///Lapsharp sharpens using convolution kernels approximating Laplacian edge filters, sometimes producing higher quality results than unshar [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string FilterView_Sharpen {
+            get {
+                return ResourceManager.GetString("FilterView_Sharpen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sharpen filter preset. Sets the strength of the filter..
+        /// </summary>
+        public static string FilterView_SharpenPreset {
+            get {
+                return ResourceManager.GetString("FilterView_SharpenPreset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sharpen tune. Further adjusts the Sharpen preset to optimize settings for specific scenarios.
+        ///
+        ///None uses the default preset settings.
+        ///
+        ///Unsharp can be tuned for Ultrafine, Fine, Medium, Coarse, or Very Coarse sharpening. Select one based on the output picture resolution and fineness of detail to enhance.
+        ///
+        ///Lapsharp&apos;s Film tune refines settings for use with most live action content. Film uses an isotropic Laplacian kernel to sharpen all edges similarly, and luminance (brightness) information is sharpened [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string FilterView_SharpenTune {
+            get {
+                return ResourceManager.GetString("FilterView_SharpenTune", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add a new preset..
         /// </summary>
         public static string MainView_AddPreset {
             get {
                 return ResourceManager.GetString("MainView_AddPreset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Aligns the initial timestamps of all audio and video streams by inserting blank frames or dropping frames. May improve audio/video sync for broken players that do not honor MP4 edit lists..
+        /// </summary>
+        public static string MainView_AlignAVStart {
+            get {
+                return ResourceManager.GetString("MainView_AlignAVStart", resourceCulture);
             }
         }
         

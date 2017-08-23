@@ -13,6 +13,7 @@ namespace HandBrakeWPF
     using System.IO;
     using System.Linq;
     using System.Windows;
+    using System.Windows.Controls;
 
     using Caliburn.Micro;
 
@@ -36,6 +37,8 @@ namespace HandBrakeWPF
             Application.Current.Dispatcher.UnhandledException += this.Dispatcher_UnhandledException;
             AppDomain.CurrentDomain.UnhandledException +=
                 this.CurrentDomain_UnhandledException;
+
+            ToolTipService.ShowDurationProperty.OverrideMetadata(typeof(DependencyObject), new FrameworkPropertyMetadata(15000));
         }
 
         /// <summary>
@@ -46,10 +49,11 @@ namespace HandBrakeWPF
         /// </param>
         protected override void OnStartup(StartupEventArgs e)
         {
+            // We don't support Windows XP / 2003 / 2003 R2 / Vista / 2008
             OperatingSystem os = Environment.OSVersion;
-            if ((os.Platform == PlatformID.Win32NT) && (os.Version.Major == 5 && os.Version.Minor <= 1))
+            if (((os.Platform == PlatformID.Win32NT) && (os.Version.Major == 5)) || ((os.Platform == PlatformID.Win32NT) && (os.Version.Major == 6 && os.Version.Minor < 1)))
             {
-                MessageBox.Show("Windows XP and earlier are no longer supported. Version 0.9.9 was the last version to support these versions. ", "Notice", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("HandBrake requires Windows 7 or later to run. Version 0.9.9 (XP) and 0.10.5 (Vista) was the last version to support these versions.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 Application.Current.Shutdown();
                 return;
             }
@@ -94,15 +98,17 @@ namespace HandBrakeWPF
         /// </param>
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            if (e.ExceptionObject.GetType() == typeof(FileNotFoundException))
-            {
-                GeneralApplicationException exception = new GeneralApplicationException("A file appears to be missing.", "Try re-installing Microsoft .NET Framework 4.0", (Exception)e.ExceptionObject);
-                this.ShowError(exception);
-            }
-            else
-            {
-                this.ShowError(e.ExceptionObject);
-            }
+            Caliburn.Micro.Execute.OnUIThreadAsync(() => {
+                if (e.ExceptionObject.GetType() == typeof(FileNotFoundException))
+                {
+                    GeneralApplicationException exception = new GeneralApplicationException("A file appears to be missing.", "Try re-installing Microsoft .NET Framework 4.0", (Exception)e.ExceptionObject);
+                    this.ShowError(exception);
+                }
+                else
+                {
+                    this.ShowError(e.ExceptionObject);
+                }
+            });
         }
 
         /// <summary>

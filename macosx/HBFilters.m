@@ -37,6 +37,10 @@ NSString * const HBFiltersChangedNotification = @"HBFiltersChangedNotification";
         _denoiseCustomString = @"";
         _denoisePreset = @"medium";
         _denoiseTune = @"none";
+        _sharpen = @"off";
+        _sharpenCustomString = @"";
+        _sharpenPreset = @"medium";
+        _sharpenTune = @"none";
 
         _notificationsEnabled = YES;
     }
@@ -177,7 +181,7 @@ NSString * const HBFiltersChangedNotification = @"HBFiltersChangedNotification";
 
     if (hb_validate_filter_preset(filter_id, self.deinterlacePreset.UTF8String, NULL, NULL))
     {
-        _deinterlacePreset = @"default";
+        self.deinterlacePreset = @"default";
     }
 }
 
@@ -271,6 +275,111 @@ NSString * const HBFiltersChangedNotification = @"HBFiltersChangedNotification";
     [self postChangedNotification];
 }
 
+- (void)setSharpen:(NSString *)sharpen
+{
+    if (![sharpen isEqualToString:_sharpen])
+    {
+        [[self.undo prepareWithInvocationTarget:self] setSharpen:_sharpen];
+    }
+    if (sharpen)
+    {
+        _sharpen = [sharpen copy];
+    }
+    else
+    {
+        _sharpen = @"off";
+    }
+
+    if (!(self.undo.isUndoing || self.undo.isRedoing))
+    {
+        [self validateSharpenPreset];
+        [self validateSharpenTune];
+    }
+    [self postChangedNotification];
+}
+
+- (void)setSharpenPreset:(NSString *)sharpenPreset
+{
+    if (![sharpenPreset isEqualToString:_sharpenPreset])
+    {
+        [[self.undo prepareWithInvocationTarget:self] setSharpenPreset:_sharpenPreset];
+    }
+    if (sharpenPreset)
+    {
+        _sharpenPreset = [sharpenPreset copy];
+    }
+    else
+    {
+        _sharpenPreset = @"medium";
+    }
+
+    [self postChangedNotification];
+}
+
+- (void)validateSharpenPreset
+{
+    int filter_id = HB_FILTER_UNSHARP;
+    if ([self.sharpen isEqualToString:@"lapsharp"])
+    {
+        filter_id = HB_FILTER_LAPSHARP;
+    }
+
+    if (hb_validate_filter_preset(filter_id, self.sharpenPreset.UTF8String, NULL, NULL))
+    {
+        self.sharpenPreset = @"medium";
+    }
+}
+
+- (void)setSharpenTune:(NSString *)sharpenTune
+{
+    if (![sharpenTune isEqualToString:_sharpenTune])
+    {
+        [[self.undo prepareWithInvocationTarget:self] setSharpenTune:_sharpenTune];
+    }
+    if (sharpenTune)
+    {
+        _sharpenTune = [sharpenTune copy];
+    }
+    else
+    {
+        _sharpenTune = @"none";
+    }
+
+    [self postChangedNotification];
+}
+
+- (void)validateSharpenTune
+{
+    int filter_id = HB_FILTER_UNSHARP;
+    if ([self.sharpen isEqualToString:@"lapsharp"])
+    {
+        filter_id = HB_FILTER_LAPSHARP;
+    }
+
+    if (hb_validate_filter_preset(filter_id, self.sharpenPreset.UTF8String, self.sharpenTune.UTF8String, NULL))
+    {
+        self.sharpenTune = @"none";
+    }
+}
+
+- (void)setSharpenCustomString:(NSString *)sharpenCustomString
+{
+    if (![sharpenCustomString isEqualToString:_sharpenCustomString])
+    {
+        [[self.undo prepareWithInvocationTarget:self] setSharpenCustomString:_sharpenCustomString];
+    }
+    if (sharpenCustomString)
+    {
+        _sharpenCustomString = [sharpenCustomString copy];
+    }
+    else
+    {
+        _sharpenCustomString = @"";
+    }
+
+    [self postChangedNotification];
+}
+
 - (void)setDeblock:(int)deblock
 {
     if (deblock != _deblock)
@@ -317,7 +426,7 @@ NSString * const HBFiltersChangedNotification = @"HBFiltersChangedNotification";
 
     if ([key isEqualToString:@"summary"])
     {
-        retval = [NSSet setWithObjects:@"detelecine", @"detelecineCustomString", @"deinterlace", @"deinterlacePreset", @"deinterlaceCustomString", @"denoise", @"denoisePreset", @"denoiseTune", @"denoiseCustomString", @"deblock", @"grayscale", nil];
+        retval = [NSSet setWithObjects:@"detelecine", @"detelecineCustomString", @"deinterlace", @"deinterlacePreset", @"deinterlaceCustomString", @"denoise", @"denoisePreset", @"denoiseTune", @"denoiseCustomString", @"deblock", @"grayscale", @"sharpen", @"sharpenPreset", @"sharpenTune", @"sharpenCustomString", nil];
     }
     else if ([key isEqualToString:@"customDetelecineSelected"])
     {
@@ -335,6 +444,17 @@ NSString * const HBFiltersChangedNotification = @"HBFiltersChangedNotification";
     else if ([key isEqualToString:@"denoiseEnabled"])
     {
         retval = [NSSet setWithObject:@"denoise"];
+    }
+    else if ([key isEqualToString:@"sharpenTunesAvailable"] ||
+             [key isEqualToString:@"customSharpenSelected"])
+    {
+        retval = [NSSet setWithObjects:@"sharpen", @"sharpenPreset", nil];
+    }
+    else if ([key isEqualToString:@"sharpenEnabled"]  ||
+             [key isEqualToString:@"sharpenPresets"] ||
+             [key isEqualToString:@"sharpenTunes"])
+    {
+        retval = [NSSet setWithObject:@"sharpen"];
     }
     else if ([key isEqualToString:@"deinterlaceEnabled"])
     {
@@ -381,6 +501,11 @@ NSString * const HBFiltersChangedNotification = @"HBFiltersChangedNotification";
         copy->_denoiseTune = [_denoiseTune copy];
         copy->_denoiseCustomString = [_denoiseCustomString copy];
 
+        copy->_sharpen = [_sharpen copy];
+        copy->_sharpenPreset = [_sharpenPreset copy];
+        copy->_sharpenTune = [_sharpenTune copy];
+        copy->_sharpenCustomString = [_sharpenCustomString copy];
+
         copy->_deblock = _deblock;
         copy->_grayscale = _grayscale;
         copy->_rotate = _rotate;
@@ -416,6 +541,11 @@ NSString * const HBFiltersChangedNotification = @"HBFiltersChangedNotification";
     encodeObject(_denoiseTune);
     encodeObject(_denoiseCustomString);
 
+    encodeObject(_sharpen);
+    encodeObject(_sharpenPreset);
+    encodeObject(_sharpenTune);
+    encodeObject(_sharpenCustomString);
+
     encodeInt(_deblock);
     encodeBool(_grayscale);
     encodeInt(_rotate);
@@ -426,20 +556,25 @@ NSString * const HBFiltersChangedNotification = @"HBFiltersChangedNotification";
 {
     self = [super init];
 
-    decodeObject(_detelecine, NSString);
-    decodeObject(_detelecineCustomString, NSString);
+    decodeObjectOrFail(_detelecine, NSString);
+    decodeObjectOrFail(_detelecineCustomString, NSString);
 
-    decodeObject(_combDetection, NSString);
-    decodeObject(_combDetectionCustomString, NSString);
+    decodeObjectOrFail(_combDetection, NSString);
+    decodeObjectOrFail(_combDetectionCustomString, NSString);
 
-    decodeObject(_deinterlace, NSString);
-    decodeObject(_deinterlacePreset, NSString)
-    decodeObject(_deinterlaceCustomString, NSString);
+    decodeObjectOrFail(_deinterlace, NSString);
+    decodeObjectOrFail(_deinterlacePreset, NSString)
+    decodeObjectOrFail(_deinterlaceCustomString, NSString);
 
-    decodeObject(_denoise, NSString);
-    decodeObject(_denoisePreset, NSString);
-    decodeObject(_denoiseTune, NSString);
-    decodeObject(_denoiseCustomString, NSString);
+    decodeObjectOrFail(_denoise, NSString);
+    decodeObjectOrFail(_denoisePreset, NSString);
+    decodeObjectOrFail(_denoiseTune, NSString);
+    decodeObjectOrFail(_denoiseCustomString, NSString);
+
+    decodeObjectOrFail(_sharpen, NSString);
+    decodeObjectOrFail(_sharpenPreset, NSString);
+    decodeObjectOrFail(_sharpenTune, NSString);
+    decodeObjectOrFail(_sharpenCustomString, NSString);
 
     decodeInt(_deblock);
     decodeBool(_grayscale);
@@ -449,6 +584,9 @@ NSString * const HBFiltersChangedNotification = @"HBFiltersChangedNotification";
     _notificationsEnabled = YES;
 
     return self;
+
+fail:
+    return nil;
 }
 
 #pragma mark - Presets and queue
@@ -469,6 +607,11 @@ NSString * const HBFiltersChangedNotification = @"HBFiltersChangedNotification";
     preset[@"PictureDenoisePreset"] = self.denoisePreset;
     preset[@"PictureDenoiseTune"] = self.denoiseTune;
     preset[@"PictureDenoiseCustom"] = self.denoiseCustomString;
+
+    preset[@"PictureSharpenFilter"] = self.sharpen;
+    preset[@"PictureSharpenPreset"] = self.sharpenPreset;
+    preset[@"PictureSharpenTune"] = self.sharpenTune;
+    preset[@"PictureSharpenCustom"] = self.sharpenCustomString;
 
     preset[@"PictureDeblock"] = @(self.deblock);
     preset[@"VideoGrayScale"] = @(self.grayscale);
@@ -501,6 +644,12 @@ NSString * const HBFiltersChangedNotification = @"HBFiltersChangedNotification";
         self.denoiseTune = preset[@"PictureDenoiseTune"];
 
         self.denoiseCustomString = preset[@"PictureDenoiseCustom"];
+
+        // Sharpen
+        self.sharpen = preset[@"PictureSharpenFilter"];
+        self.sharpenPreset = preset[@"PictureSharpenPreset"];
+        self.sharpenTune = preset[@"PictureSharpenTune"];
+        self.sharpenCustomString = preset[@"PictureSharpenCustom"];
 
         self.deblock = [preset[@"PictureDeblock"] intValue];
         self.grayscale = [preset[@"VideoGrayScale"] boolValue];

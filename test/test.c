@@ -33,7 +33,6 @@
 #include "hb.h"
 #include "lang.h"
 #include "parsecsv.h"
-#include "openclwrapper.h"
 
 #ifdef USE_QSV
 #include "qsv_common.h"
@@ -46,6 +45,8 @@
 #include <IOKit/storage/IODVDMedia.h>
 #endif
 
+#define LAPSHARP_DEFAULT_PRESET     "medium"
+#define UNSHARP_DEFAULT_PRESET      "medium"
 #define NLMEANS_DEFAULT_PRESET      "medium"
 #define DEINTERLACE_DEFAULT_PRESET  "default"
 #define DECOMB_DEFAULT_PRESET       "default"
@@ -57,6 +58,7 @@
 
 /* Options */
 static int     debug               = HB_DEBUG_ALL;
+static int     align_av_start      = -1;
 static int     dvdnav              = 1;
 static char *  input               = NULL;
 static char *  output              = NULL;
@@ -81,6 +83,14 @@ static int     nlmeans_disable     = 0;
 static int     nlmeans_custom      = 0;
 static char *  nlmeans             = NULL;
 static char *  nlmeans_tune        = NULL;
+static int     unsharp_disable     = 0;
+static int     unsharp_custom      = 0;
+static char *  unsharp             = NULL;
+static char *  unsharp_tune        = NULL;
+static int     lapsharp_disable    = 0;
+static int     lapsharp_custom     = 0;
+static char *  lapsharp            = NULL;
+static char *  lapsharp_tune       = NULL;
 static int     detelecine_disable  = 0;
 static int     detelecine_custom   = 0;
 static char *  detelecine          = NULL;
@@ -167,7 +177,6 @@ static int      start_at_frame = 0;
 static int64_t  stop_at_pts    = 0;
 static int      stop_at_frame = 0;
 static uint64_t min_title_duration = 10;
-static int      use_opencl         = -1;
 #ifdef USE_QSV
 static int      qsv_async_depth    = -1;
 static int      qsv_decode         = -1;
@@ -209,6 +218,40 @@ static int is_whole_media_service( io_service_t service );
 
 /* Only print the "Muxing..." message once */
 static int show_mux_warning = 1;
+
+/* Terminal detection */
+static int stdout_tty = 0;
+static int stderr_tty = 0;
+static char * stdout_sep = "\n";
+static char * stderr_sep = "\n";
+static void test_tty()
+{
+#if defined(__MINGW32__)
+    HANDLE handle;
+    handle = (HANDLE) _get_osfhandle(_fileno(stdout));
+    if ((handle != INVALID_HANDLE_VALUE) && (GetFileType(handle) == FILE_TYPE_CHAR))
+    {
+        stdout_tty = 1;
+    }
+    handle = (HANDLE) _get_osfhandle(_fileno(stderr));
+    if ((handle != INVALID_HANDLE_VALUE) && (GetFileType(handle) == FILE_TYPE_CHAR))
+    {
+        stderr_tty = 1;
+    }
+#else
+    if (isatty(1) == 1)
+    {
+        stdout_tty = 1;
+    }
+    if (isatty(2) == 1)
+    {
+        stderr_tty = 1;
+    }
+#endif
+
+    if (stdout_tty == 1) stdout_sep = "\r";
+    if (stderr_tty == 1) stderr_sep = "\r";
+}
 
 /****************************************************************************
  * hb_error_handler
@@ -296,8 +339,7 @@ void EventLoop(hb_handle_t *h, hb_dict_t *preset_dict)
                     break;
             }
         }
-        hb_snooze( 200 );
-#elif !defined(SYS_BEOS)
+#else
         fd_set         fds;
         struct timeval tv;
         int            ret;
@@ -349,10 +391,15 @@ void EventLoop(hb_handle_t *h, hb_dict_t *preset_dict)
                 }
             }
         }
-        hb_snooze( 200 );
-#else
-        hb_snooze( 200 );
 #endif
+        if (stdout_tty == 0)
+        {
+            hb_snooze(2000);
+        }
+        else
+        {
+            hb_snooze(200);
+        }
 
         HandleEvents( h, preset_dict );
     }
@@ -432,6 +479,8 @@ int main( int argc, char ** argv )
     /* Init libhb */
     h = hb_init(4);  // Show all logging until debug level is parsed
 
+    test_tty(); // Terminal detection
+
     // Get utf8 command line if windows
     get_argv_utf8(&argc, &argv);
 
@@ -450,11 +499,6 @@ int main( int argc, char ** argv )
 
     hb_dvd_set_dvdnav( dvdnav );
     
-    if (use_opencl == 1)
-    {
-        hb_opencl_set_enable(h, use_opencl);
-    }
-
     /* Show version */
     fprintf( stderr, "%s - %s - %s\n",
              HB_PROJECT_TITLE, HB_PROJECT_BUILD_TITLE, HB_PROJECT_URL_WEBSITE );
@@ -571,6 +615,10 @@ cleanup:
     free(hqdn3d);
     free(nlmeans);
     free(nlmeans_tune);
+    free(unsharp);
+    free(unsharp_tune);
+    free(lapsharp);
+    free(lapsharp_tune);
     free(preset_export_name);
     free(preset_export_desc);
     free(preset_export_file);
@@ -617,8 +665,6 @@ static void PrintTitleInfo( hb_title_t * title, int feature )
              (float)title->vrate.num / title->vrate.den );
     fprintf( stderr, "  + autocrop: %d/%d/%d/%d\n", title->crop[0],
              title->crop[1], title->crop[2], title->crop[3] );
-
-    fprintf(stderr, "  + support opencl: %s\n", title->opencl_support ? "yes" : "no");
 
     fprintf( stderr, "  + chapters:\n" );
     for( i = 0; i < hb_list_count( title->list_chapter ); i++ )
@@ -776,13 +822,13 @@ static int HandleEvents(hb_handle_t * h, hb_dict_t *preset_dict)
             /* Show what title is currently being scanned */
             if (p.preview_cur)
             {
-                fprintf(stderr, "\rScanning title %d of %d, preview %d, %.2f %%",
-                        p.title_cur, p.title_count, p.preview_cur, 100 * p.progress);
+                fprintf(stderr, "%sScanning title %d of %d, preview %d, %.2f %%",
+                        stderr_sep, p.title_cur, p.title_count, p.preview_cur, 100 * p.progress);
             }
             else
             {
-                fprintf(stderr, "\rScanning title %d of %d, %.2f %%",
-                        p.title_cur, p.title_count, 100 * p.progress);
+                fprintf(stderr, "%sScanning title %d of %d, %.2f %%",
+                        stderr_sep, p.title_cur, p.title_count, 100 * p.progress);
             }
             fflush(stderr);
             break;
@@ -895,8 +941,8 @@ static int HandleEvents(hb_handle_t * h, hb_dict_t *preset_dict)
 
 #define p s.param.working
         case HB_STATE_SEARCHING:
-            fprintf( stdout, "\rEncoding: task %d of %d, Searching for start time, %.2f %%",
-                     p.pass, p.pass_count, 100.0 * p.progress );
+            fprintf( stdout, "%sEncoding: task %d of %d, Searching for start time, %.2f %%",
+                     stdout_sep, p.pass, p.pass_count, 100.0 * p.progress );
             if( p.seconds > -1 )
             {
                 fprintf( stdout, " (ETA %02dh%02dm%02ds)",
@@ -906,8 +952,8 @@ static int HandleEvents(hb_handle_t * h, hb_dict_t *preset_dict)
             break;
 
         case HB_STATE_WORKING:
-            fprintf( stdout, "\rEncoding: task %d of %d, %.2f %%",
-                     p.pass, p.pass_count, 100.0 * p.progress );
+            fprintf( stdout, "%sEncoding: task %d of %d, %.2f %%",
+                     stdout_sep, p.pass, p.pass_count, 100.0 * p.progress );
             if( p.seconds > -1 )
             {
                 fprintf( stdout, " (%.2f fps, avg %.2f fps, ETA "
@@ -923,7 +969,7 @@ static int HandleEvents(hb_handle_t * h, hb_dict_t *preset_dict)
         {
             if (show_mux_warning)
             {
-                fprintf( stdout, "\rMuxing: this may take awhile..." );
+                fprintf( stdout, "%sMuxing: this may take awhile...", stdout_sep );
                 fflush(stdout);
                 show_mux_warning = 0;
             }
@@ -1085,6 +1131,12 @@ static void showFilterDefault(FILE* const out, int filter_id)
                  "                               ");
     switch (filter_id)
     {
+        case HB_FILTER_UNSHARP:
+            preset = UNSHARP_DEFAULT_PRESET;
+            break;
+        case HB_FILTER_LAPSHARP:
+            preset = LAPSHARP_DEFAULT_PRESET;
+            break;
         case HB_FILTER_NLMEANS:
             preset = NLMEANS_DEFAULT_PRESET;
             break;
@@ -1110,6 +1162,8 @@ static void showFilterDefault(FILE* const out, int filter_id)
     {
         case HB_FILTER_DEINTERLACE:
         case HB_FILTER_NLMEANS:
+        case HB_FILTER_UNSHARP:
+        case HB_FILTER_LAPSHARP:
         case HB_FILTER_DECOMB:
         case HB_FILTER_DETELECINE:
         case HB_FILTER_HQDN3D:
@@ -1198,7 +1252,6 @@ static void ShowHelp()
 "   --queue-import-file <filename>\n"
 "                           Import an encode queue file created by the GUI\n"
 "       --no-dvdnav         Do not use dvdnav for reading DVDs\n"
-"       --no-opencl         Disable use of OpenCL\n"
 "\n"
 "\n"
 "Source Options ---------------------------------------------------------------\n"
@@ -1248,7 +1301,6 @@ static void ShowHelp()
 "       --no-optimize       Disable preset 'optimize'\n"
 "   -I, --ipod-atom         Add iPod 5G compatibility atom to MP4 container\n"
 "       --no-ipod-atom      Disable iPod 5G atom\n"
-"   -P, --use-opencl        Use OpenCL where applicable\n"
 "\n"
 "\n"
 "Video Options ----------------------------------------------------------------\n"
@@ -1454,7 +1506,7 @@ static void ShowHelp()
         }
     }
     fprintf( out, " kHz)\n"
-"                           Separate tracks by commas.\n"
+"                           or \"auto\". Separate tracks by commas.\n"
 "   -D, --drc <float>       Apply extra dynamic range compression to the\n"
 "                           audio, making soft sounds louder. Range is 1.0\n"
 "                           to 4.0 (too loud), with 1.5 - 2.5 being a useful\n"
@@ -1600,6 +1652,31 @@ static void ShowHelp()
     showFilterTunes(out, HB_FILTER_NLMEANS);
     fprintf( out,
 "                           Applies to NLMeans presets only (does not affect\n"
+"                           custom settings)\n"
+"   --unsharp[=string]      Sharpen video with unsharp filter\n");
+    showFilterPresets(out, HB_FILTER_UNSHARP);
+    showFilterKeys(out, HB_FILTER_UNSHARP);
+    showFilterDefault(out, HB_FILTER_UNSHARP);
+    fprintf( out,
+
+"   --no-unsharp            Disable preset unsharp filter\n"
+"   --unsharp-tune <string> Tune unsharp filter\n");
+    showFilterTunes(out, HB_FILTER_UNSHARP);
+    fprintf( out,
+"                           Applies to unsharp presets only (does not affect\n"
+"                           custom settings)\n"
+"   --lapsharp[=string]     Sharpen video with lapsharp filter\n");
+    showFilterPresets(out, HB_FILTER_LAPSHARP);
+    showFilterKeys(out, HB_FILTER_LAPSHARP);
+    showFilterDefault(out, HB_FILTER_LAPSHARP);
+    fprintf( out,
+
+"   --no-lapsharp           Disable preset lapsharp filter\n"
+"   --lapsharp-tune <string>\n"
+"                           Tune lapsharp filter\n");
+    showFilterTunes(out, HB_FILTER_LAPSHARP);
+    fprintf( out,
+"                           Applies to lapsharp presets only (does not affect\n"
 "                           custom settings)\n"
 "   -7, --deblock[=string]  Deblock video with pp7 filter\n");
     showFilterKeys(out, HB_FILTER_DEBLOCK);
@@ -1956,6 +2033,10 @@ static int ParseOptions( int argc, char ** argv )
     #define PAD                  309
     #define FILTER_COMB_DETECT   310
     #define QUEUE_IMPORT         311
+    #define FILTER_UNSHARP       312
+    #define FILTER_UNSHARP_TUNE  313
+    #define FILTER_LAPSHARP      314
+    #define FILTER_LAPSHARP_TUNE 315
 
     for( ;; )
     {
@@ -1966,7 +2047,6 @@ static int ParseOptions( int argc, char ** argv )
             { "describe",    no_argument,       NULL,    DESCRIBE },
             { "verbose",     optional_argument, NULL,    'v' },
             { "no-dvdnav",   no_argument,       NULL,    DVDNAV },
-            { "no-opencl",   no_argument,       &use_opencl, 0 },
 
 #ifdef USE_QSV
             { "qsv-baseline",         no_argument,       NULL,        QSV_BASELINE,       },
@@ -1983,7 +2063,6 @@ static int ParseOptions( int argc, char ** argv )
             { "no-optimize", no_argument,       &mp4_optimize, 0 },
             { "ipod-atom",   no_argument,       NULL,        'I' },
             { "no-ipod-atom",no_argument,       &ipod_atom,    0 },
-            { "use-opencl",  no_argument,       NULL,        'P' },
 
             { "title",       required_argument, NULL,    't' },
             { "min-duration",required_argument, NULL,    MIN_DURATION },
@@ -1993,6 +2072,8 @@ static int ParseOptions( int argc, char ** argv )
             { "angle",       required_argument, NULL,    ANGLE },
             { "markers",     optional_argument, NULL,    'm' },
             { "no-markers",  no_argument,       &chapter_markers, 0 },
+            { "align-av",    no_argument,       &align_av_start, 1 },
+            { "no-align-av", no_argument,       &align_av_start, 0 },
             { "audio-lang-list", required_argument, NULL, AUDIO_LANG_LIST },
             { "all-audio",   no_argument,       &audio_all, 1 },
             { "first-audio", no_argument,       &audio_all, 0 },
@@ -2031,6 +2112,12 @@ static int ParseOptions( int argc, char ** argv )
             { "nlmeans",     optional_argument, NULL,    FILTER_NLMEANS },
             { "no-nlmeans",  no_argument,       &nlmeans_disable,     1 },
             { "nlmeans-tune",required_argument, NULL,    FILTER_NLMEANS_TUNE },
+            { "unsharp",     optional_argument, NULL,    FILTER_UNSHARP },
+            { "no-unsharp",  no_argument,       &unsharp_disable,     1 },
+            { "unsharp-tune",required_argument, NULL,    FILTER_UNSHARP_TUNE },
+            { "lapsharp",    optional_argument, NULL,    FILTER_LAPSHARP },
+            { "no-lapsharp", no_argument,       &lapsharp_disable,     1 },
+            { "lapsharp-tune", required_argument, NULL,  FILTER_LAPSHARP_TUNE },
             { "detelecine",  optional_argument, NULL,    '9' },
             { "no-detelecine", no_argument,     &detelecine_disable,  1 },
             { "no-comb-detect", no_argument,    &comb_detect_disable, 1 },
@@ -2225,9 +2312,6 @@ static int ParseOptions( int argc, char ** argv )
                 break;
             case 'I':
                 ipod_atom = 1;
-                break;
-            case 'P':
-                use_opencl = 1;
                 break;
             case 't':
                 titleindex = atoi( optarg );
@@ -2458,6 +2542,36 @@ static int ParseOptions( int argc, char ** argv )
                 free(nlmeans_tune);
                 nlmeans_tune = strdup(optarg);
                 break;
+            case FILTER_UNSHARP:
+                free(unsharp);
+                if (optarg != NULL)
+                {
+                    unsharp = strdup(optarg);
+                }
+                else
+                {
+                    unsharp = strdup(UNSHARP_DEFAULT_PRESET);
+                }
+                break;
+            case FILTER_UNSHARP_TUNE:
+                free(unsharp_tune);
+                unsharp_tune = strdup(optarg);
+                break;
+            case FILTER_LAPSHARP:
+                free(lapsharp);
+                if (optarg != NULL)
+                {
+                    lapsharp = strdup(optarg);
+                }
+                else
+                {
+                    lapsharp = strdup(LAPSHARP_DEFAULT_PRESET);
+                }
+                break;
+            case FILTER_LAPSHARP_TUNE:
+                free(lapsharp_tune);
+                lapsharp_tune = strdup(optarg);
+                break;
             case '9':
                 free(detelecine);
                 if (optarg != NULL)
@@ -2552,14 +2666,17 @@ static int ParseOptions( int argc, char ** argv )
                 break;
             case 'n':
             {
-                int    i;
-                char * tmp = optarg;
-                for( i = 0; i < 4; i++ )
+                if( optarg != NULL )
                 {
-                    if( !*tmp )
-                        break;
-                    crop[i] = strtol( tmp, &tmp, 0 );
-                    tmp++;
+                    int    i;
+                    char * tmp = optarg;
+                    for( i = 0; i < 4; i++ )
+                    {
+                        if( !*tmp )
+                            break;
+                        crop[i] = strtol( tmp, &tmp, 0 );
+                        tmp++;
+                    }
                 }
                 break;
             }
@@ -2949,6 +3066,58 @@ static int ParseOptions( int argc, char ** argv )
         }
     }
 
+    if (unsharp != NULL)
+    {
+        if (unsharp_disable)
+        {
+            fprintf(stderr,
+                    "Incompatible options --unsharp and --no-unsharp\n");
+            return -1;
+        }
+        if (!hb_validate_filter_preset(HB_FILTER_UNSHARP, unsharp,
+                                       unsharp_tune, NULL))
+        {
+            // Nothing to do, but must validate preset before
+            // attempting to validate custom settings to prevent potential
+            // false positive
+        }
+        else if (!hb_validate_filter_string(HB_FILTER_UNSHARP, unsharp))
+        {
+            unsharp_custom = 1;
+        }
+        else
+        {
+            fprintf(stderr, "Invalid unsharp option %s\n", unsharp);
+            return -1;
+        }
+    }
+
+    if (lapsharp != NULL)
+    {
+        if (lapsharp_disable)
+        {
+            fprintf(stderr,
+                    "Incompatible options --lapsharp and --no-lapsharp\n");
+            return -1;
+        }
+        if (!hb_validate_filter_preset(HB_FILTER_LAPSHARP, lapsharp,
+                                       lapsharp_tune, NULL))
+        {
+            // Nothing to do, but must validate preset before
+            // attempting to validate custom settings to prevent potential
+            // false positive
+        }
+        else if (!hb_validate_filter_string(HB_FILTER_LAPSHARP, lapsharp))
+        {
+            lapsharp_custom = 1;
+        }
+        else
+        {
+            fprintf(stderr, "Invalid lapsharp option %s\n", lapsharp);
+            return -1;
+        }
+    }
+
     return 0;
 }
 
@@ -3125,6 +3294,10 @@ static hb_dict_t * PreparePreset(const char *preset_name)
     if (chapter_markers != -1)
     {
         hb_dict_set(preset, "ChapterMarkers", hb_value_bool(chapter_markers));
+    }
+    if (align_av_start != -1)
+    {
+        hb_dict_set(preset, "AlignAVStart", hb_value_bool(align_av_start));
     }
     hb_value_array_t *subtitle_lang_array;
     subtitle_lang_array = hb_dict_get(preset, "SubtitleLanguageList");
@@ -3663,11 +3836,6 @@ static hb_dict_t * PreparePreset(const char *preset_name)
         hb_dict_set(preset, "VideoQSVDecode", hb_value_int(qsv_decode));
     }
 #endif
-    if (use_opencl != -1)
-    {
-        hb_dict_set(preset, "VideoScaler",
-                    hb_value_string(use_opencl ? "opencl" : "swscale"));
-    }
     if (maxWidth > 0)
     {
         hb_dict_set(preset, "PictureWidth", hb_value_int(maxWidth));
@@ -3862,6 +4030,56 @@ static hb_dict_t * PreparePreset(const char *preset_name)
                         hb_value_string("custom"));
             hb_dict_set(preset, "PictureDenoiseCustom",
                         hb_value_string(nlmeans));
+        }
+    }
+    if (unsharp_disable && !strcasecmp(s, "unsharp"))
+    {
+        hb_dict_set(preset, "PictureSharpenFilter", hb_value_string("off"));
+    }
+    if (unsharp != NULL)
+    {
+        hb_dict_set(preset, "PictureSharpenFilter", hb_value_string("unsharp"));
+        if (!unsharp_custom)
+        {
+            hb_dict_set(preset, "PictureSharpenPreset",
+                        hb_value_string(unsharp));
+            if (unsharp_tune != NULL)
+            {
+                hb_dict_set(preset, "PictureSharpenTune",
+                            hb_value_string(unsharp_tune));
+            }
+        }
+        else
+        {
+            hb_dict_set(preset, "PictureSharpenPreset",
+                        hb_value_string("custom"));
+            hb_dict_set(preset, "PictureSharpenCustom",
+                        hb_value_string(unsharp));
+        }
+    }
+    if (lapsharp_disable && !strcasecmp(s, "lapsharp"))
+    {
+        hb_dict_set(preset, "PictureSharpenFilter", hb_value_string("off"));
+    }
+    if (lapsharp != NULL)
+    {
+        hb_dict_set(preset, "PictureSharpenFilter", hb_value_string("lapsharp"));
+        if (!lapsharp_custom)
+        {
+            hb_dict_set(preset, "PictureSharpenPreset",
+                        hb_value_string(lapsharp));
+            if (lapsharp_tune != NULL)
+            {
+                hb_dict_set(preset, "PictureSharpenTune",
+                            hb_value_string(lapsharp_tune));
+            }
+        }
+        else
+        {
+            hb_dict_set(preset, "PictureSharpenPreset",
+                        hb_value_string("custom"));
+            hb_dict_set(preset, "PictureSharpenCustom",
+                        hb_value_string(lapsharp));
         }
     }
     if (deblock_disable)
@@ -4183,7 +4401,7 @@ PrepareJob(hb_handle_t *h, hb_title_t *title, hb_dict_t *preset_dict)
                 {
                     arate = hb_audio_samplerate_get_from_name(arates[ii]);
                 }
-                if (arate <= 0)
+                if (arate < 0)
                 {
                     fprintf(stderr, "Invalid sample rate %s, using input rate\n",
                             arates[ii]);

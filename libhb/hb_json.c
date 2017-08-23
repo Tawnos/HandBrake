@@ -390,14 +390,14 @@ hb_dict_t* hb_job_to_dict( const hb_job_t * job )
     "{"
     // SequenceID
     "s:o,"
-    // Destination {Mux, ChapterMarkers, ChapterList}
-    "s:{s:o, s:o, s:[]},"
+    // Destination {Mux, AlignAVStart, ChapterMarkers, ChapterList}
+    "s:{s:o, s:o, s:o, s:[]},"
     // Source {Path, Title, Angle}
     "s:{s:o, s:o, s:o,},"
     // PAR {Num, Den}
     "s:{s:o, s:o},"
-    // Video {Encoder, OpenCL, QSV {Decode, AsyncDepth}}
-    "s:{s:o, s:o, s:{s:o, s:o}},"
+    // Video {Encoder, QSV {Decode, AsyncDepth}}
+    "s:{s:o, s:{s:o, s:o}},"
     // Audio {CopyMask, FallbackEncoder, AudioList []}
     "s:{s:[], s:o, s:[]},"
     // Subtitles {Search {Enable, Forced, Default, Burn}, SubtitleList []}
@@ -410,6 +410,7 @@ hb_dict_t* hb_job_to_dict( const hb_job_t * job )
         "SequenceID",           hb_value_int(job->sequence_id),
         "Destination",
             "Mux",              hb_value_int(job->mux),
+            "AlignAVStart",     hb_value_bool(job->align_av_start),
             "ChapterMarkers",   hb_value_bool(job->chapter_markers),
             "ChapterList",
         "Source",
@@ -421,7 +422,6 @@ hb_dict_t* hb_job_to_dict( const hb_job_t * job )
             "Den",              hb_value_int(job->par.den),
         "Video",
             "Encoder",          hb_value_int(job->vcodec),
-            "OpenCL",           hb_value_bool(job->use_opencl),
             "QSV",
                 "Decode",       hb_value_bool(job->qsv.decode),
                 "AsyncDepth",   hb_value_int(job->qsv.async_depth),
@@ -853,17 +853,17 @@ hb_job_t* hb_dict_to_job( hb_handle_t * h, hb_dict_t *dict )
     "s:i,"
     // Destination {File, Mux, ChapterMarkers, ChapterList,
     //              Mp4Options {Mp4Optimize, IpodAtom}}
-    "s:{s?s, s:o, s:b, s?o s?{s?b, s?b}},"
+    "s:{s?s, s:o, s?b, s:b, s?o s?{s?b, s?b}},"
     // Source {Angle, Range {Type, Start, End, SeekPoints}}
     "s:{s?i, s?{s:s, s?I, s?I, s?I}},"
     // PAR {Num, Den}
     "s?{s:i, s:i},"
     // Video {Codec, Quality, Bitrate, Preset, Tune, Profile, Level, Options
     //        TwoPass, Turbo, ColorMatrixCode,
-    //        OpenCL, QSV {Decode, AsyncDepth}}
+    //        QSV {Decode, AsyncDepth}}
     "s:{s:o, s?f, s?i, s?s, s?s, s?s, s?s, s?s,"
     "   s?b, s?b, s?i,"
-    "   s?b, s?{s?b, s?i}},"
+    "   s?{s?b, s?i}},"
     // Audio {CopyMask, FallbackEncoder, AudioList}
     "s?{s?o, s?o, s?o},"
     // Subtitle {Search {Enable, Forced, Default, Burn}, SubtitleList}
@@ -878,6 +878,7 @@ hb_job_t* hb_dict_to_job( hb_handle_t * h, hb_dict_t *dict )
         "Destination",
             "File",                 unpack_s(&destfile),
             "Mux",                  unpack_o(&mux),
+            "AlignAVStart",         unpack_b(&job->align_av_start),
             "ChapterMarkers",       unpack_b(&job->chapter_markers),
             "ChapterList",          unpack_o(&chapter_list),
             "Mp4Options",
@@ -905,7 +906,6 @@ hb_job_t* hb_dict_to_job( hb_handle_t * h, hb_dict_t *dict )
             "TwoPass",              unpack_b(&job->twopass),
             "Turbo",                unpack_b(&job->fastfirstpass),
             "ColorMatrixCode",      unpack_i(&job->color_matrix_code),
-            "OpenCL",               unpack_b(&job->use_opencl),
             "QSV",
                 "Decode",           unpack_b(&job->qsv.decode),
                 "AsyncDepth",       unpack_i(&job->qsv.async_depth),

@@ -8,8 +8,8 @@
 
 ; HM NIS Edit Wizard helper defines
 !define PRODUCT_NAME "HandBrake"
-!define PRODUCT_VERSION "1.0.3"
-!define PRODUCT_VERSION_NUMBER "1.0.3"
+!define PRODUCT_VERSION "1.1.0"
+!define PRODUCT_VERSION_NUMBER "1.1.0"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
@@ -78,9 +78,9 @@ Function .onInit
   MessageBox MB_OK|MB_ICONEXCLAMATION "The installer is already running." /SD IDOK
   Abort
   
-  ; Detect if the intsaller is running on Windows XP and abort if it is.
-  ${IfNot} ${AtLeastWinVista}
-    MessageBox MB_OK "Windows Vista with Service Pack 1 or later is required in order to run HandBrake."
+  ; Detect if the intsaller is running on Windows XP/Vista and abort if it is.
+  ${IfNot} ${AtLeastWin7}
+    MessageBox MB_OK "Windows 7 with Service Pack 1 or later is required in order to run HandBrake."
     Quit
   ${EndIf}
 
@@ -120,7 +120,7 @@ Section "HandBrake" SEC01
   ; Get .NET if required
   ${If} $InstallDotNET == "Yes"
      SetDetailsView hide
-     inetc::get /caption "Downloading Microsoft .NET Framework 4.6" /canceltext "Cancel" "http://go.microsoft.com/fwlink/?LinkId=528222" "$INSTDIR\dotnetfx.exe" /end
+     inetc::get /caption "Downloading Microsoft .NET Framework 4.6" /canceltext "Cancel" "https://www.microsoft.com/en-us/download/confirmation.aspx?id=49982" "$INSTDIR\dotnetfx.exe" /end
      Pop $1
 
      ${If} $1 != "OK"

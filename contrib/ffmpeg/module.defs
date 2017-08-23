@@ -9,9 +9,9 @@ endif
 $(eval $(call import.MODULE.defs,FFMPEG,ffmpeg,$(__deps__)))
 $(eval $(call import.CONTRIB.defs,FFMPEG))
 
-FFMPEG.FETCH.url =  https://download.handbrake.fr/handbrake/contrib/libav-12.tar.gz
-FFMPEG.FETCH.url += https://libav.org/releases/libav-12.tar.gz
-FFMPEG.FETCH.sha256  = ca5cb22ba660f0bdc47817fdb9d99059a71f9eb0776c68cf8bef769a5ccc7534
+FFMPEG.FETCH.url =  https://download.handbrake.fr/handbrake/contrib/libav-12.1.tar.gz
+FFMPEG.FETCH.url += https://libav.org/releases/libav-12.1.tar.gz
+FFMPEG.FETCH.sha256 = f08d48bfd26097402d61f831e77effd53d0838fdeccb02ea85ec3c5d2a4527e1
 
 FFMPEG.CONFIGURE.deps  =
 FFMPEG.CONFIGURE.host  =
@@ -112,20 +112,12 @@ endif
 ## enable compile verbosity
 FFMPEG.BUILD.extra = V=1
 
-##
-## llvm inline assembler (used in llvm-gcc and clang) runs out of registers
-## on darwin i386 - unclear if it is a source code or llvm bug.
-##
-ifeq (darwin-i386,$(BUILD.system)-$(BUILD.machine))
-    ## optimize mode hack: use clang
-    ifneq (none,$(FFMPEG.GCC.O))
-        FFMPEG.GCC.gcc = clang
-    endif
-
-    ## debug mode hack: omit frame pointer
-    ifneq (none,$(FFMPEG.GCC.g))
-        FFMPEG.GCC.args.extra += -fomit-frame-pointer
-    endif
+# 32-bit intel
+ifneq (,$(filter $(BUILD.machine),i386 i486 i586 i686))
+    # avoid running out of registers
+    FFMPEG.GCC.args.extra += -fomit-frame-pointer
+    # avoid 'asm' operand has impossible constraints errors
+    FFMPEG.CONFIGURE.extra += --disable-inline-asm
 endif
 
 ## For POSIX.1-2001

@@ -88,9 +88,8 @@ namespace HandBrakeWPF.ViewModels
         private bool showAdvancedTab;
         private bool removePunctuation;
         private bool resetWhenDoneAction;
-        private VideoScaler selectedScalingMode;
+
         private bool disableQuickSyncDecoding;
-        private bool isClScaling;
         private bool showQueueInline;
         private bool pauseOnLowDiskspace;
         private long pauseOnLowDiskspaceLevel;
@@ -162,6 +161,14 @@ namespace HandBrakeWPF.ViewModels
         #endregion
 
         #region Properties
+
+        public bool IsUWP
+        {
+            get
+            {
+                return UwpDetect.IsUWP();
+            }
+        }
 
         #region General
 
@@ -971,18 +978,7 @@ namespace HandBrakeWPF.ViewModels
         /// <summary>
         /// Gets or sets the selected scaling mode.
         /// </summary>
-        public VideoScaler SelectedScalingMode
-        {
-            get
-            {
-                return this.selectedScalingMode;
-            }
-            set
-            {
-                this.selectedScalingMode = value;
-                this.IsClScaling = value == VideoScaler.BicubicCl;
-            }
-        }
+        public VideoScaler SelectedScalingMode { get; set; }
 
         /// <summary>
         /// Gets a value indicating whether is quick sync available.
@@ -1031,26 +1027,6 @@ namespace HandBrakeWPF.ViewModels
             get
             {
                 return new BindingList<VideoScaler>(EnumHelper<VideoScaler>.GetEnumList().ToList());
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether is cl scaling.
-        /// </summary>
-        public bool IsClScaling
-        {
-            get
-            {
-                return this.isClScaling;
-            }
-            set
-            {
-                if (value.Equals(this.isClScaling))
-                {
-                    return;
-                }
-                this.isClScaling = value;
-                this.NotifyOfPropertyChange(() => this.IsClScaling);
             }
         }
 
@@ -1574,10 +1550,11 @@ namespace HandBrakeWPF.ViewModels
         /// <returns>True if valid</returns>
         private bool IsValidAutonameFormat(string input, bool isSilent)
         {
+            char[] invalidchars = Path.GetInvalidFileNameChars();
+            Array.Sort(invalidchars);
             foreach (var characterToTest in input)
             {
-                // we binary search for the character in the invalid set. This should be lightning fast.
-                if (Array.BinarySearch(Path.GetInvalidFileNameChars(), characterToTest) >= 0)
+                if (Array.BinarySearch(invalidchars, characterToTest) >= 0)
                 {
                     if (!isSilent)
                     {

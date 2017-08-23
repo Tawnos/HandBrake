@@ -9,9 +9,6 @@
 
 namespace HandBrake.ApplicationServices.Utilities
 {
-    using System;
-    using System.Reflection;
-
     using HandBrake.ApplicationServices.Interop;
     using HandBrake.ApplicationServices.Interop.Interfaces;
 
@@ -28,9 +25,15 @@ namespace HandBrake.ApplicationServices.Utilities
         /// </returns>
         public static string GetVersion()
         {
-            IHandBrakeInstance instance = HandBrakeInstanceManager.GetScanInstance(1);
+            IHandBrakeInstance instance = HandBrakeInstanceManager.MasterInstance;
        
             return IsNightly() ? string.Format("Nightly {0} ({1})", instance.Version, instance.Build) : string.Format("{0} ({1})", instance.Version, instance.Build);
+        }
+
+        public static string GetVersionShort()
+        {
+            IHandBrakeInstance instance = HandBrakeInstanceManager.MasterInstance;
+            return string.Format("{0} {1}", instance.Version, instance.Build);
         }
 
         /// <summary>
@@ -41,7 +44,7 @@ namespace HandBrake.ApplicationServices.Utilities
         /// </returns>
         public static bool IsNightly()
         {
-            IHandBrakeInstance instance = HandBrakeInstanceManager.GetScanInstance(1);
+            IHandBrakeInstance instance = HandBrakeInstanceManager.MasterInstance;
 
             // 01 = Unofficial Builds.  00 = Official Tagged Releases.
             return instance.Build.ToString().EndsWith("01");

@@ -115,7 +115,7 @@ static int hb_reader_open( hb_work_private_t * r )
             // to start decoding early using r->pts_to_start
             hb_bd_seek_pts(r->bd, r->job->pts_to_start);
             r->duration -= r->job->pts_to_start;
-            r->job->pts_to_start = 0;
+            r->job->reader_pts_offset = r->job->pts_to_start;
             r->start_found = 1;
         }
         else
@@ -159,9 +159,29 @@ static int hb_reader_open( hb_work_private_t * r )
             return 1;
         if (r->job->start_at_preview)
         {
-            hb_stream_seek(r->stream, (float)(r->job->start_at_preview - 1) /
-                           (r->job->seek_points ? (r->job->seek_points + 1.0)
-                                                : 11.0));
+            // First try seeking to PTS title duration / (seek_points + 1)
+            float frac = (float)(r->job->start_at_preview - 1) /
+                         (r->job->seek_points ? (r->job->seek_points + 1.0)
+                                              : 11.0);
+            int64_t start = r->title->duration * frac;
+            if (hb_stream_seek_ts(r->stream, start) >= 0)
+            {
+                // If successful, we know the video stream has been seeked
+                // to the right location. But libav does not seek all
+                // streams (e.g. audio and subtitles) to the same position
+                // for some stream types (AVI). Setting start_found = 0
+                // enables code that filters out packets that we receive
+                // before the correct start time is encountered.
+                r->start_found = 0;
+                r->job->reader_pts_offset = AV_NOPTS_VALUE;
+            }
+            else
+            {
+                // hb_stream_seek_ts only works for libav streams.
+                // TS and PS streams have not index and have timestamp
+                // discontinuities, so we seek to a byte position in these.
+                hb_stream_seek(r->stream, frac);
+            }
         }
         else if (r->job->pts_to_start)
         {
@@ -172,6 +192,7 @@ static int hb_reader_open( hb_work_private_t * r )
                 // first packet we get, subtract that from pts_to_start, and
                 // inspect the reset of the frames in sync.
                 r->duration -= r->job->pts_to_start;
+                r->job->reader_pts_offset = AV_NOPTS_VALUE;
             }
             else
             {
@@ -491,7 +512,8 @@ static int reader_work( hb_work_object_t * w, hb_buffer_t ** buf_in,
             // libav is allowing SSA subtitles to leak through that are
             // prior to the seek point.  So only make the adjustment to
             // pts_to_start after we see the next video buffer.
-            if (buf->s.id != r->job->title->video_id)
+            if (buf->s.id != r->job->title->video_id ||
+                buf->s.start == AV_NOPTS_VALUE)
             {
                 hb_buffer_close(&buf);
                 continue;
@@ -499,15 +521,7 @@ static int reader_work( hb_work_object_t * w, hb_buffer_t ** buf_in,
             // We will inspect the timestamps of each frame in sync
             // to skip from this seek point to the timestamp we
             // want to start at.
-            if (buf->s.start != AV_NOPTS_VALUE &&
-                buf->s.start < r->job->pts_to_start)
-            {
-                r->job->pts_to_start -= buf->s.start;
-            }
-            else if ( buf->s.start >= r->job->pts_to_start )
-            {
-                r->job->pts_to_start = 0;
-            }
+            r->job->reader_pts_offset = buf->s.start;
             r->start_found = 1;
         }
 

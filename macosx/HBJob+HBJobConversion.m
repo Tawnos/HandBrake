@@ -83,8 +83,12 @@
     job->mux = self.container;
     job->vcodec = self.video.encoder;
 
-    // We set http optimized mp4 here
     job->mp4_optimize = self.mp4HttpOptimize;
+
+    if (self.container & HB_MUX_MASK_MP4)
+    {
+        job->align_av_start = self.alignAVStart;
+    }
 
     // We set the chapter marker extraction here based on the format being
     // mpeg4 or mkv and the checkbox being checked.
@@ -488,6 +492,24 @@
                     self.picture.width, self.picture.height,
                     self.picture.cropTop, self.picture.cropBottom,
                     self.picture.cropLeft, self.picture.cropRight].UTF8String);
+
+    // Sharpen
+    if (![self.filters.sharpen isEqualToString:@"off"])
+    {
+        int filter_id = HB_FILTER_UNSHARP;
+        if ([self.filters.sharpen isEqualToString:@"lapsharp"])
+        {
+            filter_id = HB_FILTER_LAPSHARP;
+        }
+
+        hb_dict_t *filter_dict = hb_generate_filter_settings(filter_id,
+                                                  self.filters.sharpenPreset.UTF8String,
+                                                  self.filters.sharpenTune.UTF8String,
+                                                  self.filters.sharpenCustomString.UTF8String);
+        filter = hb_filter_init(filter_id);
+        hb_add_filter_dict(job, filter, filter_dict);
+        hb_dict_free(&filter_dict);
+    }
 
     // Add grayscale filter
     if (self.filters.grayscale)

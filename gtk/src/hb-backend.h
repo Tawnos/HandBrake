@@ -103,6 +103,8 @@ void ghb_remove_job(gint unique_id);
 void ghb_start_queue(void);
 void ghb_stop_queue(void);
 void ghb_pause_queue(void);
+void ghb_resume_queue(void);
+void ghb_pause_resume_queue(void);
 
 void ghb_start_live_encode();
 void ghb_stop_live_encode();
@@ -121,6 +123,7 @@ void ghb_backend_scan_stop();
 void ghb_backend_queue_scan(const gchar *path, gint titleindex);
 hb_list_t * ghb_get_title_list();
 void ghb_par_init(signal_user_data_t *ud);
+void ghb_apply_crop(GhbValue *settings, const hb_title_t * title);
 void ghb_set_scale(signal_user_data_t *ud, gint mode);
 void ghb_set_scale_settings(GhbValue *settings, gint mode);
 void ghb_picture_settings_deps(signal_user_data_t *ud);

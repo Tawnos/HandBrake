@@ -220,6 +220,18 @@ combo_opts_t denoise_opts =
     d_denoise_opts
 };
 
+static options_map_t d_sharpen_opts[] =
+{
+    {N_("Off"),      "off",      HB_FILTER_INVALID},
+    {N_("Unsharp"),  "unsharp",  HB_FILTER_UNSHARP},
+    {N_("Lapsharp"), "lapsharp", HB_FILTER_LAPSHARP },
+};
+combo_opts_t sharpen_opts =
+{
+    sizeof(d_sharpen_opts)/sizeof(options_map_t),
+    d_sharpen_opts
+};
+
 static options_map_t d_rotate_opts[] =
 {
     {N_("Off"),         "disable=1",   0},
@@ -367,6 +379,18 @@ static filter_opts_t nlmeans_tune_opts =
     .preset    = FALSE
 };
 
+static filter_opts_t sharpen_preset_opts =
+{
+    .filter_id = HB_FILTER_UNSHARP,
+    .preset    = TRUE
+};
+
+static filter_opts_t sharpen_tune_opts =
+{
+    .filter_id = HB_FILTER_UNSHARP,
+    .preset    = FALSE
+};
+
 #if 0
 static filter_opts_t hqdn3d_preset_opts =
 {
@@ -438,6 +462,8 @@ static void filter_opts_set(signal_user_data_t *ud, const gchar *name,
 static void deint_opts_set(signal_user_data_t *ud, const gchar *name,
                            void *vopts, const void* data);
 static void denoise_opts_set(signal_user_data_t *ud, const gchar *name,
+                             void *vopts, const void* data);
+static void sharpen_opts_set(signal_user_data_t *ud, const gchar *name,
                              void *vopts, const void* data);
 
 static GhbValue * generic_opt_get(const char *name, const void *opts,
@@ -553,6 +579,24 @@ combo_name_map_t combo_name_map[] =
         "PictureDenoiseTune",
         &nlmeans_tune_opts,
         filter_opts_set,
+        filter_opt_get
+    },
+    {
+        "PictureSharpenFilter",
+        &sharpen_opts,
+        small_opts_set,
+        generic_opt_get
+    },
+    {
+        "PictureSharpenPreset",
+        &sharpen_preset_opts,
+        sharpen_opts_set,
+        filter_opt_get
+    },
+    {
+        "PictureSharpenTune",
+        &sharpen_tune_opts,
+        sharpen_opts_set,
         filter_opt_get
     },
     {
@@ -1206,7 +1250,7 @@ ghb_grey_combo_options(signal_user_data_t *ud)
     for (enc = hb_audio_encoder_get_next(NULL); enc != NULL;
          enc = hb_audio_encoder_get_next(enc))
     {
-        if (!(mux->format & enc->muxers))
+        if (!(mux->format & enc->muxers) && enc->codec != HB_ACODEC_NONE)
         {
             grey_builder_combo_box_item(ud->builder, "AudioEncoder",
                 enc->codec, TRUE);
@@ -1630,7 +1674,8 @@ ghb_audio_encoder_opts_set_with_mask(
     for (enc = hb_audio_encoder_get_next(NULL); enc != NULL;
          enc = hb_audio_encoder_get_next(enc))
     {
-        if ((mask & enc->codec) && !(neg_mask & enc->codec))
+        if ((mask & enc->codec) && !(neg_mask & enc->codec) &&
+            enc->codec != HB_ACODEC_AUTO_PASS)
         {
             gtk_list_store_append(store, &iter);
             str = g_strdup_printf("<small>%s</small>", enc->name);
@@ -1642,6 +1687,30 @@ ghb_audio_encoder_opts_set_with_mask(
                                -1);
             g_free(str);
         }
+    }
+}
+
+void
+ghb_audio_encoder_opts_add_autopass(GtkComboBox *combo)
+{
+    GtkTreeIter iter;
+    GtkListStore *store;
+    gchar *str;
+    const hb_encoder_t *enc;
+
+    enc = hb_audio_encoder_get_from_codec(HB_ACODEC_AUTO_PASS);
+    if (enc != NULL)
+    {
+        store = GTK_LIST_STORE(gtk_combo_box_get_model (combo));
+        gtk_list_store_append(store, &iter);
+        str = g_strdup_printf("<small>%s</small>", enc->name);
+        gtk_list_store_set(store, &iter,
+                           0, str,
+                           1, TRUE,
+                           2, enc->short_name,
+                           3, (gdouble)enc->codec,
+                           -1);
+        g_free(str);
     }
 }
 
@@ -1699,7 +1768,8 @@ audio_encoder_opts_set_with_mask(
 void
 ghb_audio_encoder_opts_set(GtkComboBox *combo)
 {
-    ghb_audio_encoder_opts_set_with_mask(combo, ~0, 0);
+    ghb_audio_encoder_opts_set_with_mask(combo, ~0, HB_ACODEC_NONE);
+    ghb_audio_encoder_opts_add_autopass(combo);
 }
 
 static void
@@ -1708,31 +1778,8 @@ audio_encoder_opts_set(signal_user_data_t *ud, const gchar *name,
 {
     (void)opts; // Silence "unused variable" warning
     (void)data; // Silence "unused variable" warning
-    GtkTreeIter iter;
-    GtkListStore *store;
-    gchar *str;
-
     GtkComboBox *combo = GTK_COMBO_BOX(GHB_WIDGET(ud->builder, name));
-    store = GTK_LIST_STORE(gtk_combo_box_get_model (combo));
-    gtk_list_store_clear(store);
-
-    const hb_encoder_t *enc;
-    for (enc = hb_audio_encoder_get_next(NULL); enc != NULL;
-         enc = hb_audio_encoder_get_next(enc))
-    {
-        if (enc->codec != HB_ACODEC_AUTO_PASS)
-        {
-            gtk_list_store_append(store, &iter);
-            str = g_strdup_printf("<small>%s</small>", enc->name);
-            gtk_list_store_set(store, &iter,
-                               0, str,
-                               1, TRUE,
-                               2, enc->short_name,
-                               3, (gdouble)enc->codec,
-                               -1);
-            g_free(str);
-        }
-    }
+    ghb_audio_encoder_opts_set_with_mask(combo, ~0, HB_ACODEC_NONE);
 }
 
 static void
@@ -2575,6 +2622,21 @@ denoise_opts_set(signal_user_data_t *ud, const gchar *name,
                                   "denoise", opts->filter_id);
 }
 
+static void
+sharpen_opts_set(signal_user_data_t *ud, const gchar *name,
+               void *vopts, const void* data)
+{
+    (void)data;  // Silence "unused variable" warning
+
+    filter_opts_t *opts = (filter_opts_t*)vopts;
+    opts->filter_id = ghb_settings_combo_int(ud->settings,
+                                             "PictureSharpenFilter");
+    filter_opts_set2(ud, name, opts->filter_id, opts->preset);
+
+    ghb_set_custom_filter_tooltip(ud, "PictureSharpenCustom",
+                                  "sharpen", opts->filter_id);
+}
+
 combo_name_map_t*
 find_combo_map(const gchar *name)
 {
@@ -3390,11 +3452,86 @@ ghb_limit_rational( gint *num, gint *den, gint limit )
 }
 
 void
+ghb_apply_crop(GhbValue *settings, const hb_title_t * title)
+{
+    gboolean autocrop, loosecrop;
+    gint crop[4] = {0,};
+
+    autocrop = ghb_dict_get_bool(settings, "PictureAutoCrop");
+    // "PictureLooseCrop" is a flag that says we prefer to crop extra to
+    // satisfy alignment constraints rather than scaling to satisfy them.
+    loosecrop = ghb_dict_get_bool(settings, "PictureLooseCrop");
+
+    if (autocrop)
+    {
+        crop[0] = title->crop[0];
+        crop[1] = title->crop[1];
+        crop[2] = title->crop[2];
+        crop[3] = title->crop[3];
+    }
+    else
+    {
+        crop[0] = ghb_dict_get_int(settings, "PictureTopCrop");
+        crop[1] = ghb_dict_get_int(settings, "PictureBottomCrop");
+        crop[2] = ghb_dict_get_int(settings, "PictureLeftCrop");
+        crop[3] = ghb_dict_get_int(settings, "PictureRightCrop");
+    }
+    if (loosecrop)
+    {
+        gint need1, need2;
+        gint crop_width, crop_height, width, height;
+        gint mod;
+
+        mod = ghb_settings_combo_int(settings, "PictureModulus");
+        if (mod <= 0)
+            mod = 16;
+
+        // Adjust the cropping to accomplish the desired width and height
+        crop_width = title->geometry.width - crop[2] - crop[3];
+        crop_height = title->geometry.height - crop[0] - crop[1];
+        width = MOD_DOWN(crop_width, mod);
+        height = MOD_DOWN(crop_height, mod);
+
+        need1 = EVEN((crop_height - height) / 2);
+        need2 = crop_height - height - need1;
+        crop[0] += need1;
+        crop[1] += need2;
+        need1 = EVEN((crop_width - width) / 2);
+        need2 = crop_width - width - need1;
+        crop[2] += need1;
+        crop[3] += need2;
+    }
+    // Prevent crop from creating too small an image
+    if (title->geometry.height - crop[0] -crop[1] < 16)
+    {
+        crop[0] = title->geometry.height - crop[1] - 16;
+        if (crop[0] < 0)
+        {
+            crop[1] += crop[0];
+            crop[0] = 0;
+        }
+    }
+    if (title->geometry.width - crop[2] - crop[3] < 16)
+    {
+        crop[2] = title->geometry.width - crop[3] - 16;
+        if (crop[2] < 0)
+        {
+            crop[3] += crop[2];
+            crop[2] = 0;
+        }
+    }
+    ghb_dict_set_int(settings, "PictureTopCrop", crop[0]);
+    ghb_dict_set_int(settings, "PictureBottomCrop", crop[1]);
+    ghb_dict_set_int(settings, "PictureLeftCrop", crop[2]);
+    ghb_dict_set_int(settings, "PictureRightCrop", crop[3]);
+}
+
+void
 ghb_set_scale_settings(GhbValue *settings, gint mode)
 {
     gboolean keep_aspect;
     gint pic_par;
-    gboolean autocrop, autoscale, loosecrop;
+    gboolean autoscale;
     gint crop[4] = {0,};
     gint width, height;
     gint crop_width, crop_height;
@@ -3437,11 +3574,7 @@ ghb_set_scale_settings(GhbValue *settings, gint mode)
     if (mod <= 0)
         mod = 16;
     keep_aspect = ghb_dict_get_bool(settings, "PictureKeepRatio");
-    autocrop = ghb_dict_get_bool(settings, "PictureAutoCrop");
     autoscale = ghb_dict_get_bool(settings, "autoscale");
-    // "PictureLooseCrop" is a flag that says we prefer to crop extra to
-    // satisfy alignment constraints rather than scaling to satisfy them.
-    loosecrop = ghb_dict_get_bool(settings, "PictureLooseCrop");
     // Align dimensions to either 16 or 2 pixels
     // The scaler crashes if the dimensions are not divisible by 2
     // x264 also will not accept dims that are not multiple of 2
@@ -3451,56 +3584,11 @@ ghb_set_scale_settings(GhbValue *settings, gint mode)
         keep_height = FALSE;
     }
 
-    if (autocrop)
-    {
-        crop[0] = title->crop[0];
-        crop[1] = title->crop[1];
-        crop[2] = title->crop[2];
-        crop[3] = title->crop[3];
-        ghb_dict_set_int(settings, "PictureTopCrop", crop[0]);
-        ghb_dict_set_int(settings, "PictureBottomCrop", crop[1]);
-        ghb_dict_set_int(settings, "PictureLeftCrop", crop[2]);
-        ghb_dict_set_int(settings, "PictureRightCrop", crop[3]);
-    }
-    else
-    {
-        crop[0] = ghb_dict_get_int(settings, "PictureTopCrop");
-        crop[1] = ghb_dict_get_int(settings, "PictureBottomCrop");
-        crop[2] = ghb_dict_get_int(settings, "PictureLeftCrop");
-        crop[3] = ghb_dict_get_int(settings, "PictureRightCrop");
-        // Prevent manual crop from creating too small an image
-        if (title->geometry.height - crop[0] < crop[1] + 16)
-        {
-            crop[0] = title->geometry.height - crop[1] - 16;
-        }
-        if (title->geometry.width - crop[2] < crop[3] + 16)
-        {
-            crop[2] = title->geometry.width - crop[3] - 16;
-        }
-    }
-    if (loosecrop)
-    {
-        gint need1, need2;
-
-        // Adjust the cropping to accomplish the desired width and height
-        crop_width = title->geometry.width - crop[2] - crop[3];
-        crop_height = title->geometry.height - crop[0] - crop[1];
-        width = MOD_DOWN(crop_width, mod);
-        height = MOD_DOWN(crop_height, mod);
-
-        need1 = EVEN((crop_height - height) / 2);
-        need2 = crop_height - height - need1;
-        crop[0] += need1;
-        crop[1] += need2;
-        need1 = EVEN((crop_width - width) / 2);
-        need2 = crop_width - width - need1;
-        crop[2] += need1;
-        crop[3] += need2;
-        ghb_dict_set_int(settings, "PictureTopCrop", crop[0]);
-        ghb_dict_set_int(settings, "PictureBottomCrop", crop[1]);
-        ghb_dict_set_int(settings, "PictureLeftCrop", crop[2]);
-        ghb_dict_set_int(settings, "PictureRightCrop", crop[3]);
-    }
+    ghb_apply_crop(settings, title);
+    crop[0] = ghb_dict_get_int(settings, "PictureTopCrop");
+    crop[1] = ghb_dict_get_int(settings, "PictureBottomCrop");
+    crop[2] = ghb_dict_get_int(settings, "PictureLeftCrop");
+    crop[3] = ghb_dict_get_int(settings, "PictureRightCrop");
     uiGeo.crop[0] = crop[0];
     uiGeo.crop[1] = crop[1];
     uiGeo.crop[2] = crop[2];
@@ -4187,18 +4275,30 @@ ghb_stop_live_encode()
 void
 ghb_pause_queue()
 {
+    hb_status.queue.state |= GHB_STATE_PAUSED;
+    hb_pause( h_queue );
+}
+
+void
+ghb_resume_queue()
+{
+    hb_status.queue.state &= ~GHB_STATE_PAUSED;
+    hb_resume( h_queue );
+}
+
+void
+ghb_pause_resume_queue()
+{
     hb_state_t s;
     hb_get_state2( h_queue, &s );
 
     if( s.state == HB_STATE_PAUSED )
     {
-        hb_status.queue.state &= ~GHB_STATE_PAUSED;
-        hb_resume( h_queue );
+        ghb_resume_queue();
     }
     else
     {
-        hb_status.queue.state |= GHB_STATE_PAUSED;
-        hb_pause( h_queue );
+        ghb_pause_queue();
     }
 }
 

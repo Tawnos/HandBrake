@@ -537,18 +537,36 @@
     self.completedItemsCount = completedCount;
 }
 
-#pragma mark -
-#pragma mark Queue Job Processing
-
-#define ALMOST_5GB 5000000000
+#pragma mark - Queue Job Processing
 
 - (BOOL)_isDiskSpaceLowAtURL:(NSURL *)url
 {
-    NSDictionary *dict = [[NSFileManager defaultManager] attributesOfFileSystemForPath:url.URLByDeletingLastPathComponent.path error:NULL];
-    long long freeSpace = [dict[NSFileSystemFreeSize] longLongValue];
-    if (freeSpace < ALMOST_5GB) {
-        return YES;
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"HBQueuePauseIfLowSpace"])
+    {
+        NSURL *volumeURL = nil;
+        NSDictionary<NSURLResourceKey, id> *attrs = [url resourceValuesForKeys:@[NSURLIsVolumeKey, NSURLVolumeURLKey] error:NULL];
+        long long minCapacity = [[[NSUserDefaults standardUserDefaults] stringForKey:@"HBQueueMinFreeSpace"] longLongValue] * 1000000000;
+
+        volumeURL = [attrs[NSURLIsVolumeKey] boolValue] ? url : attrs[NSURLVolumeURLKey];
+
+        if (volumeURL)
+        {
+            if ([volumeURL respondsToSelector:@selector(removeCachedResourceValueForKey:)])
+            {
+                [volumeURL removeCachedResourceValueForKey:NSURLVolumeAvailableCapacityKey];
+            }
+            attrs = [volumeURL resourceValuesForKeys:@[NSURLVolumeAvailableCapacityKey] error:NULL];
+
+            if (attrs[NSURLVolumeAvailableCapacityKey])
+            {
+                if ([attrs[NSURLVolumeAvailableCapacityKey] longLongValue] < minCapacity)
+                {
+                    return YES;
+                }
+            }
+        }
     }
+
     return NO;
 }
 

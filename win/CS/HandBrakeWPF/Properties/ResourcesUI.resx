@@ -456,11 +456,8 @@
   <data name="PictureSettingsView_Output" xml:space="preserve">
     <value>Output</value>
   </data>
-  <data name="PictureSettingsView_ParH" xml:space="preserve">
-    <value>PAR Height:</value>
-  </data>
-  <data name="PictureSettingsView_ParW" xml:space="preserve">
-    <value>PAR Width:</value>
+  <data name="PictureSettingsView_PAR" xml:space="preserve">
+    <value>PAR:</value>
   </data>
   <data name="PictureSettingsView_Right" xml:space="preserve">
     <value>Right</value>
@@ -508,7 +505,7 @@
     <value>Do nothing</value>
   </data>
   <data name="QueueView_Export" xml:space="preserve">
-    <value>Export Queue</value>
+    <value>Export Queue for CLI</value>
   </data>
   <data name="QueueView_Hibernate" xml:space="preserve">
     <value>Hibernate</value>
@@ -898,5 +895,20 @@ This will not affect your current settings in the Subtitle tab.</value>
   </data>
   <data name="OptionsView_PlaySoundWhenDone" xml:space="preserve">
     <value>Play a sound when the queue or single encode completes:</value>
+  </data>
+  <data name="MainView_Muxing" xml:space="preserve">
+    <value>Muxing: This may take a while...</value>
+  </data>
+  <data name="MainView_ProgressStatusWithTask" xml:space="preserve">
+    <value>Encoding: {0}, {1:00.00}%, Time Remaining: {2}, {3}</value>
+  </data>
+  <data name="MainView_Searching" xml:space="preserve">
+    <value>Searching for start time</value>
+  </data>
+  <data name="FiltersView_Sharpen" xml:space="preserve">
+    <value>Sharpen</value>
+  </data>
+  <data name="MainView_AlignAVStart" xml:space="preserve">
+    <value>Align A/V Start</value>
   </data>
 </root>

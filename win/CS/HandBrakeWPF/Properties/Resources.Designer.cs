@@ -421,7 +421,7 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Configure Defaults.
+        ///   Looks up a localized string similar to Selection Behavior.
         /// </summary>
         public static string AudioViewModel_ConfigureDefaults {
             get {
@@ -723,6 +723,15 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Your destination directory is low on diskspace. Please free up some disk space on your destination drive. Alternatively you can change the level at which this alert triggers in Options. .
+        /// </summary>
+        public static string Main_LowDiskspace {
+            get {
+                return ResourceManager.GetString("Main_LowDiskspace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You cannot encode to a file with the same path and filename as the source file. Please update the destination filename so that it does not match the source file..
         /// </summary>
         public static string Main_MatchingFileOverwriteWarning {
@@ -823,7 +832,7 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This preset appears to already exist. Would you like to overwrite it?.
+        ///   Looks up a localized string similar to The preset &quot;{0}&quot; already exists. Would you like to overwrite it?.
         /// </summary>
         public static string Main_PresetOverwriteWarning {
             get {
@@ -893,6 +902,15 @@ namespace HandBrakeWPF.Properties {
         public static string Main_QueueLabel {
             get {
                 return ResourceManager.GetString("Main_QueueLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Queue Paused.
+        /// </summary>
+        public static string Main_QueuePaused {
+            get {
+                return ResourceManager.GetString("Main_QueuePaused", resourceCulture);
             }
         }
         
@@ -983,7 +1001,7 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please select a preset..
+        ///   Looks up a localized string similar to Please select make sure you have selected one of your own presets. Please note that you cannot export built-in presets..
         /// </summary>
         public static string Main_SelectPreset {
             get {
@@ -1256,6 +1274,15 @@ namespace HandBrakeWPF.Properties {
         public static string Overwrite {
             get {
                 return ResourceManager.GetString("Overwrite", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Queue Paused.  Warning, the drive you are encoding to is low on disk space. Please free up some space and press start to continue. You can also adjust the minimum space level in preferences..
+        /// </summary>
+        public static string PauseOnLowDiskspace {
+            get {
+                return ResourceManager.GetString("PauseOnLowDiskspace", resourceCulture);
             }
         }
         
@@ -1547,6 +1574,15 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Queue Paused.
+        /// </summary>
+        public static string QueueViewModel_QueuePaused {
+            get {
+                return ResourceManager.GetString("QueueViewModel_QueuePaused", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The Queue has been paused. The currently running job will run to completion and no further jobs will start..
         /// </summary>
         public static string QueueViewModel_QueuePauseNotice {
@@ -1696,7 +1732,7 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Configure Defaults.
+        ///   Looks up a localized string similar to Selection Behavior.
         /// </summary>
         public static string SubtitlesViewModel_ConfigureDefaults {
             get {
@@ -1885,15 +1921,6 @@ namespace HandBrakeWPF.Properties {
         public static string Video_QuickSyncNotAvailable {
             get {
                 return ResourceManager.GetString("Video_QuickSyncNotAvailable", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Requires a graphics card that supports OpenCL 1.1 or later. It will fallback to Lanczos software scaling when it is not available for use. Performance gain up to 5%. Minor decrease in quality in some cases..
-        /// </summary>
-        public static string Video_ScalingModes {
-            get {
-                return ResourceManager.GetString("Video_ScalingModes", resourceCulture);
             }
         }
         

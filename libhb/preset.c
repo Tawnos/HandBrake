@@ -492,7 +492,7 @@ static int sanitize_audio_codec(int in_codec, int out_codec,
              !(in_codec & out_codec & HB_ACODEC_PASS_MASK))
     {
         codec = hb_audio_encoder_get_fallback_for_passthru(out_codec);
-        if (codec == 0)
+        if (codec == HB_ACODEC_INVALID)
             codec = fallback;
     }
 
@@ -500,14 +500,14 @@ static int sanitize_audio_codec(int in_codec, int out_codec,
     const hb_encoder_t *encoder = NULL;
     while ((encoder = hb_audio_encoder_get_next(encoder)) != NULL)
     {
-        if (encoder->codec == codec &&
+        if (encoder->codec == codec && codec != HB_ACODEC_NONE &&
             !(encoder->muxers & mux))
         {
             codec = hb_audio_encoder_get_default(mux);
             break;
         }
     }
-    if (codec == 0)
+    if (codec == HB_ACODEC_INVALID)
         codec = hb_audio_encoder_get_default(mux);
     return codec;
 }
@@ -630,7 +630,6 @@ static void add_audio_for_lang(hb_value_array_t *list, const hb_dict_t *preset,
             hb_dict_t *used = source_audio_track_used(track_dict, ii);
             if (hb_value_get_bool(hb_dict_get(used, key)))
                 continue;
-            hb_dict_set(used, key, hb_value_bool(1));
 
             // Create new audio output track settings
             hb_dict_t *audio_dict = hb_dict_init();
@@ -657,6 +656,11 @@ static void add_audio_for_lang(hb_value_array_t *list, const hb_dict_t *preset,
             aconfig = hb_list_audio_config_item(title->list_audio, track);
             out_codec = sanitize_audio_codec(aconfig->in.codec, out_codec,
                                              copy_mask, fallback, mux);
+            if (out_codec == HB_ACODEC_NONE || HB_ACODEC_INVALID)
+            {
+                hb_value_free(&audio_dict);
+                continue;
+            }
             hb_dict_set(audio_dict, "Track", hb_value_int(track));
             hb_dict_set(audio_dict, "Encoder", hb_value_string(
                         hb_audio_encoder_get_short_name(out_codec)));
@@ -700,6 +704,10 @@ static void add_audio_for_lang(hb_value_array_t *list, const hb_dict_t *preset,
                     sr_name = hb_dict_get_string(encoder_dict,
                                                  "AudioSamplerate");
                     sr      = hb_audio_samplerate_get_from_name(sr_name);
+                    if (sr < 0)
+                    {
+                        sr = 0;
+                    }
                     hb_dict_set(audio_dict, "Samplerate", hb_value_int(sr));
                 }
                 if (hb_dict_get(encoder_dict, "AudioCompressionLevel") != NULL)
@@ -726,6 +734,7 @@ static void add_audio_for_lang(hb_value_array_t *list, const hb_dict_t *preset,
             hb_sanitize_audio_settings(title,  audio_dict);
 
             hb_value_array_append(list, audio_dict);
+            hb_dict_set(used, key, hb_value_bool(1));
         }
         if (behavior == 2)
             track = find_audio_track(title, lang, track + 1, behavior);
@@ -1367,6 +1376,56 @@ int hb_preset_apply_filters(const hb_dict_t *preset, hb_dict_t *job_dict)
         }
     }
 
+    // Sharpen filter
+    const char *sharpen_filter, *sharpen_preset, *sharpen_tune, *sharpen_custom;
+    sharpen_filter = hb_value_get_string(hb_dict_get(preset,
+                                                   "PictureSharpenFilter"));
+    sharpen_preset = hb_value_get_string(hb_dict_get(preset,
+                                                   "PictureSharpenPreset"));
+    sharpen_tune   = hb_value_get_string(hb_dict_get(preset,
+                                                   "PictureSharpenTune"));
+    sharpen_custom = hb_value_get_string(hb_dict_get(preset,
+                                                   "PictureSharpenCustom"));
+    if (sharpen_filter != NULL && sharpen_preset != NULL &&
+        strcasecmp(sharpen_filter, "off"))
+    {
+        int filter_id;
+        if (!strcasecmp(sharpen_filter, "lapsharp"))
+        {
+            filter_id = HB_FILTER_LAPSHARP;
+        }
+        else if (!strcasecmp(sharpen_filter, "unsharp"))
+        {
+            filter_id = HB_FILTER_UNSHARP;
+        }
+        else
+        {
+            hb_error("Invalid sharpen filter (%s)", sharpen_filter);
+            return -1;
+        }
+        filter_settings = hb_generate_filter_settings(filter_id,
+                            sharpen_preset, sharpen_tune, sharpen_custom);
+        if (filter_settings == NULL)
+        {
+            hb_error("Invalid sharpen filter settings (%s%s%s)",
+                     sharpen_preset,
+                     sharpen_tune ? "," : "",
+                     sharpen_tune ? sharpen_tune : "");
+            return -1;
+        }
+        else if (!hb_dict_get_bool(filter_settings, "disable"))
+        {
+            filter_dict = hb_dict_init();
+            hb_dict_set(filter_dict, "ID", hb_value_int(filter_id));
+            hb_dict_set(filter_dict, "Settings", filter_settings);
+            hb_add_filter2(filter_list, filter_dict);
+        }
+        else
+        {
+            hb_value_free(&filter_settings);
+        }
+    }
+
     // Deblock filter
     char *deblock = hb_value_get_string_xform(
                         hb_dict_get(preset, "PictureDeblock"));
@@ -1622,15 +1681,6 @@ int hb_preset_apply_video(const hb_dict_t *preset, hb_dict_t *job_dict)
                     hb_value_xform(value, HB_VALUE_TYPE_INT));
     }
 
-    if ((value = hb_dict_get(preset, "VideoScaler")) != NULL)
-    {
-        const char *s = hb_value_get_string(value);
-        if (!strcasecmp(s, "opencl"))
-        {
-            hb_dict_set(video_dict, "OpenCL", hb_value_bool(1));
-        }
-    }
-
     return 0;
 }
 
@@ -1661,6 +1711,9 @@ int hb_preset_apply_mux(const hb_dict_t *preset, hb_dict_t *job_dict)
     hb_dict_t *dest_dict = hb_dict_get(job_dict, "Destination");
     hb_dict_set(dest_dict, "Mux", hb_value_string(container->short_name));
 
+    hb_dict_set(dest_dict, "AlignAVStart",
+                hb_value_xform(hb_dict_get(preset, "AlignAVStart"),
+                               HB_VALUE_TYPE_BOOL));
     if (mux & HB_MUX_MASK_MP4)
     {
         hb_dict_t *mp4_dict = hb_dict_init();
@@ -2160,6 +2213,11 @@ static void presets_clean(hb_value_t *presets, hb_value_t *template)
 void hb_presets_clean(hb_value_t *preset)
 {
     presets_clean(preset, hb_preset_template);
+}
+
+static void import_video_scaler_25_0_0(hb_value_t *preset)
+{
+    hb_dict_set(preset, "VideoScaler", hb_value_string("swscale"));
 }
 
 static void import_anamorphic_20_0_0(hb_value_t *preset)
@@ -2774,9 +2832,16 @@ static void import_video_0_0_0(hb_value_t *preset)
     }
 }
 
+static void import_25_0_0(hb_value_t *preset)
+{
+    import_video_scaler_25_0_0(preset);
+}
+
 static void import_20_0_0(hb_value_t *preset)
 {
     import_anamorphic_20_0_0(preset);
+
+    import_25_0_0(preset);
 }
 
 static void import_12_0_0(hb_value_t *preset)
@@ -2823,41 +2888,58 @@ static void import_0_0_0(hb_value_t *preset)
     import_10_0_0(preset);
 }
 
+static int cmpVersion(int a_major, int a_minor, int a_micro,
+                      int b_major, int b_minor, int b_micro)
+{
+    if (a_major > b_major) return 1;
+    if (a_major < b_major) return -1;
+    if (a_minor > b_minor) return 1;
+    if (a_minor < b_minor) return -1;
+    if (a_micro > b_micro) return 1;
+    if (a_micro < b_micro) return -1;
+    return 0;
+}
+
 static int preset_import(hb_value_t *preset, int major, int minor, int micro)
 {
     int result = 0;
 
     if (!hb_value_get_bool(hb_dict_get(preset, "Folder")))
     {
-        if (major == 0 && minor == 0 && micro == 0)
+        if (cmpVersion(major, minor, micro, 0, 0, 0) <= 0)
         {
             // Convert legacy presets (before versioning introduced)
             import_0_0_0(preset);
             result = 1;
         }
-        else if (major == 10 && minor == 0 && micro == 0)
+        else if (cmpVersion(major, minor, micro, 10, 0, 0) <= 0)
         {
             import_10_0_0(preset);
             result = 1;
         }
-        else if (major == 11 && minor == 0 && micro == 0)
+        else if (cmpVersion(major, minor, micro, 11, 0, 0) <= 0)
         {
             import_11_0_0(preset);
             result = 1;
         }
-        else if (major == 11 && minor == 1 && micro == 0)
+        else if (cmpVersion(major, minor, micro, 11, 1, 0) <= 0)
         {
             import_11_1_0(preset);
             result = 1;
         }
-        else if (major == 12 && minor == 0 && micro == 0)
+        else if (cmpVersion(major, minor, micro, 12, 0, 0) <= 0)
         {
             import_12_0_0(preset);
             result = 1;
         }
-        else if (major == 20 && minor == 0 && micro == 0)
+        else if (cmpVersion(major, minor, micro, 20, 0, 0) <= 0)
         {
             import_20_0_0(preset);
+            result = 1;
+        }
+        else if (cmpVersion(major, minor, micro, 25, 0, 0) <= 0)
+        {
+            import_25_0_0(preset);
             result = 1;
         }
         preset_clean(preset, hb_preset_template);

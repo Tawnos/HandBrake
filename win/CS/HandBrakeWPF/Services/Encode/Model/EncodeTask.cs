@@ -12,11 +12,13 @@ namespace HandBrakeWPF.Services.Encode.Model
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
 
+    using Caliburn.Micro;
+
     using HandBrake.ApplicationServices.Interop.Model;
     using HandBrake.ApplicationServices.Interop.Model.Encoding;
 
+    using HandBrakeWPF.Model.Filters;
     using HandBrakeWPF.Services.Encode.Model.Models;
-    using HandBrakeWPF.Utilities;
 
     using AllowedPassthru = HandBrakeWPF.Services.Encode.Model.Models.AllowedPassthru;
     using AudioTrack = HandBrakeWPF.Services.Encode.Model.Models.AudioTrack;
@@ -32,9 +34,6 @@ namespace HandBrakeWPF.Services.Encode.Model
     using VideoProfile = HandBrakeWPF.Services.Encode.Model.Models.Video.VideoProfile;
     using VideoTune = HandBrakeWPF.Services.Encode.Model.Models.Video.VideoTune;
 
-    /// <summary>
-    /// An Encode Task
-    /// </summary>
     public class EncodeTask : PropertyChangedBase
     {
         #region Private Fields
@@ -88,6 +87,7 @@ namespace HandBrakeWPF.Services.Encode.Model
                 this.ChapterNames.Add(new ChapterMarker(track));
             }
 
+            this.AlignAVStart = task.AlignAVStart;
             this.ChapterMarkersFilePath = task.ChapterMarkersFilePath;
             this.Cropping = new Cropping(task.Cropping);
             this.CustomDecomb = task.CustomDecomb;
@@ -107,6 +107,10 @@ namespace HandBrakeWPF.Services.Encode.Model
             this.Detelecine = task.Detelecine;
             this.FlipVideo = task.FlipVideo;
             this.Rotation = task.Rotation;
+            this.Sharpen = task.Sharpen;
+            this.SharpenPreset = task.SharpenPreset;
+            this.SharpenTune = task.SharpenTune;
+            this.SharpenCustom = task.SharpenCustom;
 
             this.DisplayWidth = task.DisplayWidth;
             this.EndPoint = task.EndPoint;
@@ -214,6 +218,8 @@ namespace HandBrakeWPF.Services.Encode.Model
         /// Gets or sets a value indicating whether IPod5GSupport.
         /// </summary>
         public bool IPod5GSupport { get; set; }
+
+        public bool AlignAVStart { get; set; }
 
         #endregion
 
@@ -367,6 +373,11 @@ namespace HandBrakeWPF.Services.Encode.Model
         /// Flip the video.
         /// </summary>
         public bool FlipVideo { get; set; }
+
+        public Sharpen Sharpen { get; set; }
+        public FilterPreset SharpenPreset { get; set; }
+        public FilterTune SharpenTune { get; set; }
+        public string SharpenCustom { get; set; }
         #endregion
 
         #region Video

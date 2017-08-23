@@ -142,10 +142,9 @@ namespace HandBrakeWPF.Services.Scan
         {
             try
             {
-                this.ServiceLogMessage("Stopping Scan ...");
+                this.ServiceLogMessage("Manually Stopping Scan ...");
                 this.IsScanning = false;
-                this.instance.StopScan();
-                this.ServiceLogMessage("Scan Stopped ...");
+                this.instance.StopScan();              
             }
             catch (Exception exc)
             {
@@ -154,6 +153,7 @@ namespace HandBrakeWPF.Services.Scan
             finally
             {
                 this.ScanCompleted?.Invoke(this, new ScanCompletedEventArgs(this.isCancelled, null, null, null));
+                this.ServiceLogMessage("Scan Stopped ...");
             }
         }
 
@@ -261,7 +261,7 @@ namespace HandBrakeWPF.Services.Scan
                 HandBrakeUtils.SetDvdNav(!configuraiton.IsDvdNavDisabled);
 
                 this.ServiceLogMessage("Starting Scan ...");
-                this.instance.StartScan(sourcePath.ToString(), previewCount, minDuration, title != 0 ? title : 0, configuraiton.ScalingMode == VideoScaler.BicubicCl);
+                this.instance.StartScan(sourcePath.ToString(), previewCount, minDuration, title != 0 ? title : 0);
 
                 if (this.ScanStarted != null)
                     this.ScanStarted(this, System.EventArgs.Empty);

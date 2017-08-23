@@ -502,6 +502,15 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sharpen.
+        /// </summary>
+        public static string FiltersView_Sharpen {
+            get {
+                return ResourceManager.GetString("FiltersView_Sharpen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Tune:.
         /// </summary>
         public static string FiltersView_Tune {
@@ -646,6 +655,15 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Align A/V Start.
+        /// </summary>
+        public static string MainView_AlignAVStart {
+            get {
+                return ResourceManager.GetString("MainView_AlignAVStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Angle.
         /// </summary>
         public static string MainView_Angle {
@@ -754,6 +772,15 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Muxing: This may take a while....
+        /// </summary>
+        public static string MainView_Muxing {
+            get {
+                return ResourceManager.GetString("MainView_Muxing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Options.
         /// </summary>
         public static string MainView_Options {
@@ -817,6 +844,15 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Encoding: {0}, {1:00.00}%, Time Remaining: {2}, {3}.
+        /// </summary>
+        public static string MainView_ProgressStatusWithTask {
+            get {
+                return ResourceManager.GetString("MainView_ProgressStatusWithTask", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Remove.
         /// </summary>
         public static string MainView_Remove {
@@ -831,6 +867,15 @@ namespace HandBrakeWPF.Properties {
         public static string MainView_ResetBuiltInPresets {
             get {
                 return ResourceManager.GetString("MainView_ResetBuiltInPresets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Searching for start time.
+        /// </summary>
+        public static string MainView_Searching {
+            get {
+                return ResourceManager.GetString("MainView_Searching", resourceCulture);
             }
         }
         
@@ -1600,20 +1645,11 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to PAR Height:.
+        ///   Looks up a localized string similar to PAR:.
         /// </summary>
-        public static string PictureSettingsView_ParH {
+        public static string PictureSettingsView_PAR {
             get {
-                return ResourceManager.GetString("PictureSettingsView_ParH", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to PAR Width:.
-        /// </summary>
-        public static string PictureSettingsView_ParW {
-            get {
-                return ResourceManager.GetString("PictureSettingsView_ParW", resourceCulture);
+                return ResourceManager.GetString("PictureSettingsView_PAR", resourceCulture);
             }
         }
         
@@ -1818,7 +1854,7 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Export Queue.
+        ///   Looks up a localized string similar to Export Queue for CLI.
         /// </summary>
         public static string QueueView_Export {
             get {

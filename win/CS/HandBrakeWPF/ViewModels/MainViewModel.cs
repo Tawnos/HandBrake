@@ -393,6 +393,7 @@ namespace HandBrakeWPF.ViewModels
                     this.OptimizeMP4 = selectedPreset.Task.OptimizeMP4;
                     this.IPod5GSupport = selectedPreset.Task.IPod5GSupport;
                     this.SelectedOutputFormat = selectedPreset.Task.OutputFormat;
+                    this.AlignAVStart = selectedPreset.Task.AlignAVStart;
 
                     // Tab Settings
                     this.PictureSettingsViewModel.SetPreset(this.selectedPreset, this.CurrentTask);
@@ -455,6 +456,23 @@ namespace HandBrakeWPF.ViewModels
                 }
                 this.CurrentTask.IPod5GSupport = value;
                 this.NotifyOfPropertyChange(() => this.IPod5GSupport);
+            }
+        }
+
+        public bool AlignAVStart
+        {
+            get
+            {
+                return this.CurrentTask.AlignAVStart;
+            }
+            set
+            {
+                if (value == this.CurrentTask.AlignAVStart)
+                {
+                    return;
+                }
+                this.CurrentTask.AlignAVStart = value;
+                this.NotifyOfPropertyChange(() => this.AlignAVStart);
             }
         }
 
@@ -733,9 +751,9 @@ namespace HandBrakeWPF.ViewModels
                                 return;
                             }
                         }
-                        catch (ArgumentException)
+                        catch (Exception exc)
                         {
-                            this.errorService.ShowMessageBox(Resources.Main_InvalidDestination, Resources.Error, MessageBoxButton.OK, MessageBoxImage.Error);
+                            this.errorService.ShowError(Resources.Main_InvalidDestination, string.Empty, value + Environment.NewLine + exc);
                             return;
                         }
 
@@ -1236,6 +1254,8 @@ namespace HandBrakeWPF.ViewModels
         /// </summary>
         public bool IsQueueShowingInLine { get; set; } = false;
 
+        public bool IsUWP { get; } = UwpDetect.IsUWP();
+
         #endregion
 
         #region Commands 
@@ -1659,6 +1679,14 @@ namespace HandBrakeWPF.ViewModels
                 return;
             }
 
+            if (!DriveUtilities.HasMinimumDiskSpace(
+                this.Destination,
+                this.userSettingService.GetUserSetting<long>(UserSettingConstants.PauseOnLowDiskspaceLevel)))
+            {
+                this.errorService.ShowMessageBox(Resources.Main_LowDiskspace, Resources.Error, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
             if (this.scannedSource != null && !string.IsNullOrEmpty(this.scannedSource.ScanPath) && this.Destination.ToLower() == this.scannedSource.ScanPath.ToLower())
             {
                 this.errorService.ShowMessageBox(Resources.Main_MatchingFileOverwriteWarning, Resources.Error, MessageBoxButton.OK, MessageBoxImage.Error);
@@ -2023,17 +2051,18 @@ namespace HandBrakeWPF.ViewModels
         /// </summary>
         public void PresetExport()
         {
-            SaveFileDialog savefiledialog = new SaveFileDialog
+            if (this.selectedPreset != null && !this.selectedPreset.IsBuildIn)
             {
-                Filter = "json|*.json", 
-                CheckPathExists = true, 
-                AddExtension = true, 
-                DefaultExt = ".json", 
-                OverwritePrompt = true, 
-                FilterIndex = 0
-            };
-            if (this.selectedPreset != null)
-            {
+                SaveFileDialog savefiledialog = new SaveFileDialog
+                                                {
+                                                    Filter = "json|*.json",
+                                                    CheckPathExists = true,
+                                                    AddExtension = true,
+                                                    DefaultExt = ".json",
+                                                    OverwritePrompt = true,
+                                                    FilterIndex = 0
+                                                };
+
                 savefiledialog.ShowDialog();
                 string filename = savefiledialog.FileName;
 
@@ -2209,9 +2238,11 @@ namespace HandBrakeWPF.ViewModels
                 this.IsMkv = true;
                 this.CurrentTask.OptimizeMP4 = false;
                 this.CurrentTask.IPod5GSupport = false;
+                this.CurrentTask.AlignAVStart = false;
 
                 this.NotifyOfPropertyChange(() => this.OptimizeMP4);
                 this.NotifyOfPropertyChange(() => this.IPod5GSupport);
+                this.NotifyOfPropertyChange(() => this.AlignAVStart);              
             }
 
             // Update The browse file extension display
@@ -2336,8 +2367,14 @@ namespace HandBrakeWPF.ViewModels
         /// </param>
         private void ScanCompleted(object sender, ScanCompletedEventArgs e)
         {
-            if (e.ScannedSource != null)
+            this.ShowStatusWindow = false;
+
+            if (e.ScannedSource != null && !e.Cancelled)
             {
+                if (this.ScannedSource == null)
+                {
+                    this.ScannedSource = new Source();
+                }
                 e.ScannedSource.CopyTo(this.ScannedSource);
             }
             else
@@ -2347,9 +2384,7 @@ namespace HandBrakeWPF.ViewModels
 
             Execute.OnUIThread(() =>
             {
-                this.ShowStatusWindow = false;
-
-                if (e.Successful)
+                if (e.Successful && this.ScannedSource != null)
                 {
                     this.NotifyOfPropertyChange(() => this.ScannedSource);
                     this.NotifyOfPropertyChange(() => this.ScannedSource.Titles);
@@ -2420,7 +2455,7 @@ namespace HandBrakeWPF.ViewModels
                     if (this.queueProcessor.EncodeService.IsEncoding)
                     {
                         string jobsPending = string.Format(Resources.Main_JobsPending_addon, this.queueProcessor.Count);
-                        if (e.PassId == -1)
+                        if (e.IsSubtitleScan)
                         {
                             this.ProgramStatusLabel = string.Format(Resources.MainViewModel_EncodeStatusChanged_SubScan_StatusLabel,
                                 e.Task,
@@ -2429,6 +2464,14 @@ namespace HandBrakeWPF.ViewModels
                                 e.EstimatedTimeLeft,
                                 e.ElapsedTime,
                                 jobsPending);
+                        }
+                        else if (e.IsMuxing)
+                        {
+                            this.ProgramStatusLabel = ResourcesUI.MainView_Muxing;
+                        }
+                        else if (e.IsSearching)
+                        {
+                            this.ProgramStatusLabel = string.Format(ResourcesUI.MainView_ProgressStatusWithTask, ResourcesUI.MainView_Searching, e.PercentComplete, e.EstimatedTimeLeft, jobsPending);
                         }
                         else
                         {
@@ -2516,7 +2559,6 @@ namespace HandBrakeWPF.ViewModels
                     }
 
                     this.ProgramStatusLabel = Resources.Main_QueueFinished + errorDesc;
-                    this.IsEncoding = false;
 
                     if (this.windowsSeven.IsWindowsSeven)
                     {

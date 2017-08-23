@@ -20,6 +20,8 @@ namespace HandBrakeWPF.Services
     using HandBrake.ApplicationServices.Utilities;
     using HandBrakeWPF.Model;
     using HandBrakeWPF.Services.Interfaces;
+    using HandBrakeWPF.Utilities;
+
     using AppcastReader = HandBrakeWPF.Utilities.AppcastReader;
 
     /// <summary>
@@ -61,6 +63,11 @@ namespace HandBrakeWPF.Services
         /// </param>
         public void PerformStartupUpdateCheck(Action<UpdateCheckInformation> callback)
         {
+            if (UwpDetect.IsUWP())
+            {
+                return; // Disable Update checker if we are in a UWP container.
+            }
+
             // Make sure it's running on the calling thread
             if (this.userSettingService.GetUserSetting<bool>(UserSettingConstants.UpdateStatus))
             {
@@ -108,6 +115,7 @@ namespace HandBrakeWPF.Services
                         // Fetch the Appcast from our server.
                         HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                         request.AllowAutoRedirect = false; // We will never do this.
+                        request.UserAgent = string.Format("HandBrake Win Upd {0}", VersionHelper.GetVersionShort());
                         WebResponse response = request.GetResponse();
 
                         // Parse the data with the AppcastReader
@@ -180,6 +188,7 @@ namespace HandBrakeWPF.Services
 
                        HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url);
                        webRequest.Credentials = CredentialCache.DefaultCredentials;
+                       webRequest.UserAgent = string.Format("HandBrake Win Upd {0}", VersionHelper.GetVersionShort());
                        HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse();
                        long fileSize = webResponse.ContentLength;
 

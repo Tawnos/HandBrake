@@ -1,4 +1,5 @@
     {
+        "AlignAVStart": false,
         "AudioCopyMask": [
             "copy:aac",
             "copy:ac3",
@@ -56,6 +57,10 @@
         "PictureDenoiseFilter": "off",
         "PictureDenoisePreset": "medium",
         "PictureDenoiseTune": "none",
+        "PictureSharpenCustom": "",
+        "PictureSharpenFilter": "off",
+        "PictureSharpenPreset": "medium",
+        "PictureSharpenTune": "none",
         "PictureDetelecine": "off",
         "PictureDetelecineCustom": "",
         "PictureItuPAR": false,

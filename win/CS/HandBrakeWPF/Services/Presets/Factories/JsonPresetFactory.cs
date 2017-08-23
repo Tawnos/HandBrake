@@ -9,12 +9,14 @@
 
 namespace HandBrakeWPF.Services.Presets.Factories
 {
+    using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Globalization;
     using System.Linq;
 
     using HandBrake.ApplicationServices.Interop;
+    using HandBrake.ApplicationServices.Interop.HbLib;
     using HandBrake.ApplicationServices.Interop.Json.Presets;
     using HandBrake.ApplicationServices.Interop.Model;
     using HandBrake.ApplicationServices.Interop.Model.Encoding;
@@ -22,6 +24,7 @@ namespace HandBrakeWPF.Services.Presets.Factories
     using HandBrake.ApplicationServices.Utilities;
 
     using HandBrakeWPF.Model.Audio;
+    using HandBrakeWPF.Model.Filters;
     using HandBrakeWPF.Model.Picture;
     using HandBrakeWPF.Model.Subtitles;
     using HandBrakeWPF.Services.Encode.Model.Models;
@@ -69,6 +72,7 @@ namespace HandBrakeWPF.Services.Presets.Factories
             preset.Task.OptimizeMP4 = importedPreset.Mp4HttpOptimize;
             preset.Task.IPod5GSupport = importedPreset.Mp4iPodCompatible;
             preset.Task.OutputFormat = GetFileFormat(importedPreset.FileFormat.Replace("file", string.Empty).Trim()); // TOOD null check.
+            preset.Task.AlignAVStart = importedPreset.AlignAVStart;
 
             /* Picture Settings */
             preset.PictureSettingsMode = (PresetPictureSettingsMode)importedPreset.UsesPictureSettings;
@@ -99,6 +103,35 @@ namespace HandBrakeWPF.Services.Presets.Factories
             /* Filter Settings */
             preset.Task.Grayscale = importedPreset.VideoGrayScale;
             preset.Task.Deblock = importedPreset.PictureDeblock;
+
+            if (importedPreset.PictureSharpenFilter != null)
+            {
+                preset.Task.Sharpen = EnumHelper<Sharpen>.GetValue(importedPreset.PictureSharpenFilter);
+                hb_filter_ids filterId = hb_filter_ids.HB_FILTER_INVALID;
+                switch (preset.Task.Sharpen)
+                {
+                    case Sharpen.LapSharp:
+                        filterId = hb_filter_ids.HB_FILTER_LAPSHARP;
+                        break;
+                    case Sharpen.UnSharp:
+                        filterId = hb_filter_ids.HB_FILTER_UNSHARP;
+                        break;
+                }
+
+                if (filterId != hb_filter_ids.HB_FILTER_INVALID)
+                {
+                    preset.Task.SharpenPreset = new FilterPreset(HandBrakeFilterHelpers.GetFilterPresets((int)filterId).FirstOrDefault(s => s.ShortName == importedPreset.PictureSharpenPreset));
+                    preset.Task.SharpenTune = new FilterTune(HandBrakeFilterHelpers.GetFilterTunes((int)filterId).FirstOrDefault(s => s.ShortName == importedPreset.PictureSharpenTune));
+                    preset.Task.SharpenCustom = importedPreset.PictureSharpenCustom;
+                }
+                else
+                {
+                    // Default Values.
+                    preset.Task.SharpenPreset = new FilterPreset("Medium", "medium");
+                    preset.Task.SharpenTune = new FilterTune("None", "none");
+                    preset.Task.SharpenCustom = string.Empty;
+                }
+            }
 
             switch (importedPreset.PictureDeinterlaceFilter)
             {
@@ -339,15 +372,7 @@ namespace HandBrakeWPF.Services.Presets.Factories
                                                                      ? AudioBehaviourModes.AllMatching
                                                                      : AudioBehaviourModes.FirstMatch;
 
-            // TODO - The other GUI's don't support All Tracks yet. So for now we can only load / Save first track.
-            if (importedPreset.AudioSecondaryEncoderMode)
-            {
-                preset.AudioTrackBehaviours.SelectedTrackDefaultBehaviour = AudioTrackDefaultsMode.FirstTrack;
-            }
-            else
-            {
-                preset.AudioTrackBehaviours.SelectedTrackDefaultBehaviour = AudioTrackDefaultsMode.None;
-            }
+            preset.AudioTrackBehaviours.SelectedTrackDefaultBehaviour = importedPreset.AudioSecondaryEncoderMode ? AudioTrackDefaultsMode.FirstTrack : AudioTrackDefaultsMode.AllTracks;
 
             if (importedPreset.AudioCopyMask != null)
             {
@@ -405,6 +430,11 @@ namespace HandBrakeWPF.Services.Presets.Factories
 
                     // track.CompressionLevel = audioTrack.AudioCompressionLevel;
                     // track.AudioDitherMethod = audioTrack.AudioDitherMethod;
+                    if (audioTrack.AudioEncoder == "ca_aac")
+                    {
+                        audioTrack.AudioEncoder = "av_aac"; // No Core Audio support on windows.
+                    }
+
                     track.Encoder = EnumHelper<AudioEncoder>.GetValue(audioTrack.AudioEncoder);
                     track.MixDown = HandBrakeEncoderHelpers.GetMixdown(audioTrack.AudioMixdown);
 
@@ -538,7 +568,7 @@ namespace HandBrakeWPF.Services.Presets.Factories
             preset.AudioEncoderFallback = EnumHelper<AudioEncoder>.GetShortName(export.Task.AllowedPassthruOptions.AudioEncoderFallback);
             preset.AudioLanguageList = export.AudioTrackBehaviours.SelectedLanguages.Select(language => language.Code).ToList();
             preset.AudioTrackSelectionBehavior = EnumHelper<AudioBehaviourModes>.GetShortName(export.AudioTrackBehaviours.SelectedBehaviour);
-            preset.AudioSecondaryEncoderMode = export.AudioTrackBehaviours.SelectedTrackDefaultBehaviour == AudioTrackDefaultsMode.FirstTrack; // TODO -> We don't support AllTracks yet in other GUIs.
+            preset.AudioSecondaryEncoderMode = export.AudioTrackBehaviours.SelectedTrackDefaultBehaviour == AudioTrackDefaultsMode.FirstTrack; // 1 = First Track, 0 = All
             preset.AudioList = new List<AudioList>();
             foreach (var item in export.AudioTrackBehaviours.BehaviourTracks)
             {
@@ -576,6 +606,7 @@ namespace HandBrakeWPF.Services.Presets.Factories
             preset.FileFormat = EnumHelper<OutputFormat>.GetShortName(export.Task.OutputFormat);
             preset.Mp4HttpOptimize = export.Task.OptimizeMP4;
             preset.Mp4iPodCompatible = export.Task.IPod5GSupport;
+            preset.AlignAVStart = export.Task.AlignAVStart;
 
             // Picture Settings
             preset.PictureForceHeight = 0; // TODO
@@ -621,6 +652,11 @@ namespace HandBrakeWPF.Services.Presets.Factories
             preset.PictureDenoiseTune = EnumHelper<DenoiseTune>.GetShortName(export.Task.DenoiseTune);
             preset.PictureDetelecine = EnumHelper<Detelecine>.GetShortName(export.Task.Detelecine);
             preset.PictureDetelecineCustom = export.Task.CustomDetelecine;
+
+            preset.PictureSharpenFilter = EnumHelper<Sharpen>.GetShortName(export.Task.Sharpen);
+            preset.PictureSharpenPreset = export.Task.SharpenPreset != null ? export.Task.SharpenPreset.Key : string.Empty; 
+            preset.PictureSharpenTune = export.Task.SharpenTune != null ? export.Task.SharpenTune.Key : string.Empty;
+            preset.PictureSharpenCustom = export.Task.SharpenCustom;
 
             // Video
             preset.VideoEncoder = EnumHelper<VideoEncoder>.GetShortName(export.Task.VideoEncoder);

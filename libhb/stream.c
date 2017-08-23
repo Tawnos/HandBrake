@@ -4004,8 +4004,8 @@ static int do_probe(hb_stream_t *stream, hb_pes_stream_t *pes, hb_buffer_t *buf)
     }
     if ( pes->probe_buf->size > HB_MAX_PROBE_SIZE )
     {
-        pes->stream_kind = N;
         hb_buffer_close( &pes->probe_buf );
+        pes->probe_next_size = 0;
         return 1;
     }
 
@@ -4121,16 +4121,8 @@ static int do_probe(hb_stream_t *stream, hb_pes_stream_t *pes, hb_buffer_t *buf)
                         pes->codec = HB_ACODEC_FFMPEG;
                 }
             }
-            else
-            {
-                pes->stream_kind = N;
-            }
             strncpy(pes->codec_name, codec->name, 79);
             pes->codec_name[79] = 0;
-        }
-        else
-        {
-            pes->stream_kind = N;
         }
         hb_buffer_close( &pes->probe_buf );
         return 1;
@@ -4250,7 +4242,7 @@ static void hb_ts_resolve_pid_types(hb_stream_t *stream)
 
         if ( ts_stream_kind( stream, ii ) == U )
         {
-            probe++;
+            probe = 3;
         }
     }
 
@@ -4258,7 +4250,6 @@ static void hb_ts_resolve_pid_types(hb_stream_t *stream)
     hb_stream_seek( stream, 0.0 );
     stream->need_keyframe = 0;
 
-    int total_size = 0;
     hb_buffer_t *buf;
 
     if ( probe )
@@ -4266,15 +4257,6 @@ static void hb_ts_resolve_pid_types(hb_stream_t *stream)
 
     while ( probe && ( buf = hb_ts_stream_decode( stream ) ) != NULL )
     {
-        // Check upper limit of total data to probe
-        total_size += buf->size;
-
-        if ( total_size > HB_MAX_PROBE_SIZE * 2 )
-        {
-            hb_buffer_close(&buf);
-            break;
-        }
-
         int idx;
         idx = index_of_id( stream, buf->s.id );
 
@@ -4288,16 +4270,21 @@ static void hb_ts_resolve_pid_types(hb_stream_t *stream)
 
         if ( do_probe( stream, pes, buf ) )
         {
-            probe--;
-            if ( pes->stream_kind != N )
+            if ( pes->stream_kind != U )
             {
                 hb_log("    Probe: Found stream %s. stream id 0x%x-0x%x",
                         pes->codec_name, pes->stream_id, pes->stream_id_ext);
+                probe = 0;
             }
             else
             {
-                hb_log("    Probe: Unsupported stream %s. stream id 0x%x-0x%x",
-                        pes->codec_name, pes->stream_id, pes->stream_id_ext);
+                probe--;
+                if (!probe)
+                {
+                    hb_log("    Probe: Unsupported stream %s. stream id 0x%x-0x%x",
+                            pes->codec_name, pes->stream_id, pes->stream_id_ext);
+                    pes->stream_kind = N;
+                }
             }
         }
         hb_buffer_close(&buf);
@@ -4334,7 +4321,7 @@ static void hb_ps_resolve_stream_types(hb_stream_t *stream)
 
         if ( stream->pes.list[ii].stream_kind == U )
         {
-            probe++;
+            probe = 3;
         }
     }
 
@@ -4342,7 +4329,6 @@ static void hb_ps_resolve_stream_types(hb_stream_t *stream)
     hb_stream_seek( stream, 0.0 );
     stream->need_keyframe = 0;
 
-    int total_size = 0;
     hb_buffer_t *buf;
 
     if ( probe )
@@ -4350,15 +4336,6 @@ static void hb_ps_resolve_stream_types(hb_stream_t *stream)
 
     while ( probe && ( buf = hb_ps_stream_decode( stream ) ) != NULL )
     {
-        // Check upper limit of total data to probe
-        total_size += buf->size;
-
-        if ( total_size > HB_MAX_PROBE_SIZE * 2 )
-        {
-            hb_buffer_close(&buf);
-            break;
-        }
-
         int idx;
         idx = index_of_id( stream, buf->s.id );
 
@@ -4372,16 +4349,21 @@ static void hb_ps_resolve_stream_types(hb_stream_t *stream)
 
         if ( do_probe( stream, pes, buf ) )
         {
-            probe--;
-            if ( pes->stream_kind != N )
+            if ( pes->stream_kind != U )
             {
                 hb_log("    Probe: Found stream %s. stream id 0x%x-0x%x",
                         pes->codec_name, pes->stream_id, pes->stream_id_ext);
+                probe = 0;
             }
             else
             {
-                hb_log("    Probe: Unsupported stream %s. stream id 0x%x-0x%x",
-                        pes->codec_name, pes->stream_id, pes->stream_id_ext);
+                probe--;
+                if (!probe)
+                {
+                    hb_log("    Probe: Unsupported stream %s. stream id 0x%x-0x%x",
+                            pes->codec_name, pes->stream_id, pes->stream_id_ext);
+                    pes->stream_kind = N;
+                }
             }
         }
         hb_buffer_close(&buf);
@@ -5586,11 +5568,26 @@ static hb_title_t *ffmpeg_title_scan( hb_stream_t *stream, hb_title_t *title )
         for( i = 0; i < ic->nb_chapters; i++ )
             if( ( m = ic->chapters[i] ) != NULL )
             {
-                AVDictionaryEntry *tag;
-                hb_chapter_t * chapter;
-                chapter = calloc( sizeof( hb_chapter_t ), 1 );
-                chapter->index    = i+1;
-                chapter->duration = ( m->end / ( (double) m->time_base.num * m->time_base.den ) ) * 90000  - duration_sum;
+                AVDictionaryEntry * tag;
+                hb_chapter_t      * chapter;
+                int64_t             end;
+
+                chapter = calloc(sizeof(hb_chapter_t), 1);
+                chapter->index    = i + 1;
+
+                /* AVChapter.end is not guaranteed to be set.
+                 * Calculate chapter durations based on AVChapter.start.
+                 */
+                if (i + 1 < ic->nb_chapters)
+                {
+                    end = ic->chapters[i + 1]->start * 90000 *
+                          m->time_base.num / m->time_base.den;
+                }
+                else
+                {
+                    end = ic->duration * 90000 / AV_TIME_BASE;
+                }
+                chapter->duration = end - duration_sum;
                 duration_sum     += chapter->duration;
 
                 int seconds      = ( chapter->duration + 45000 ) / 90000;

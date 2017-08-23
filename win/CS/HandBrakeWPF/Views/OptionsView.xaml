@@ -37,6 +37,7 @@
         <Converters:EnumComboConverter x:Key="enumComboConverter" />
         <Options:LogLevelConverter x:Key="LogLevelConverter" />
         <Options:FileSizeConverter x:Key="fileSizeConverter" />
+        <Converters:OptionTabConverter x:Key="optionTabConverter" />
         
 
         <Converters:BooleanToVisibilityConverter x:Key="boolToVisConverter" />
@@ -72,7 +73,7 @@
         <Border BorderBrush="DarkGray"  Grid.Column="0" Grid.Row="1"  BorderThickness="0,0,1,0">
             <StackPanel Orientation="Vertical" Margin="11,5,-1,0">
 
-                <ListBox ItemsSource="{Binding Source={StaticResource OptionTabsList}}" SelectedItem="{Binding SelectedTab}"
+                <ListBox ItemsSource="{Binding Source={StaticResource OptionTabsList}, Converter={StaticResource optionTabConverter}}" SelectedItem="{Binding SelectedTab}"
                      BorderThickness="0" Background="Transparent">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
@@ -243,18 +244,13 @@
                                         Visibility="{Binding IsQuickSyncAvailable, Converter={StaticResource boolToVisConverter}, ConverterParameter=true}" />
                         </StackPanel>
 
-                        <TextBlock Text="{x:Static Properties:ResourcesUI.Options_Scaling}" FontSize="14" Margin="0,20,0,10" />
+                        <TextBlock Text="{x:Static Properties:ResourcesUI.Options_Scaling}" FontSize="14" Margin="0,20,0,10" Visibility="Collapsed" />
 
-                        <StackPanel Orientation="Horizontal" Margin="20,0,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="20,0,0,0" Visibility="Collapsed">
                             <TextBlock Text="{x:Static Properties:ResourcesUI.Options_Scaler}" Margin="0,0,5,0" VerticalAlignment="Center" />
                             <ComboBox  ItemsSource="{Binding ScalingOptions, Converter={StaticResource enumComboConverter}}" 
                                        SelectedItem="{Binding SelectedScalingMode, Converter={StaticResource enumComboConverter}}" 
                                        Width="120" VerticalAlignment="Center" />
-                        </StackPanel>
-
-                        <StackPanel Orientation="Vertical" Margin="26,2,0,0" >
-                            <TextBlock Text="{x:Static Properties:Resources.Video_ScalingModes}" TextWrapping="Wrap"
-                                       Visibility="{Binding IsClScaling, Converter={StaticResource boolToVisConverter}}" />
                         </StackPanel>
 
                     </StackPanel>

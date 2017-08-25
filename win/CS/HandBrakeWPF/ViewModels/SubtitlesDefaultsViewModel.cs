@@ -144,13 +144,14 @@ namespace HandBrakeWPF.ViewModels
             if (this.SelectedAvailableToMove.Count > 0)
             {
                 List<Language> copiedList = SelectedAvailableToMove.ToList();
-                foreach (Language item in copiedList)
+                for (int i = 0; i < this.SelectedAvailableToMove.Count; i++)
                 {
-                    this.AvailableLanguages.Remove(item);
-                    this.SubtitleBehaviours.SelectedLanguages.Add(item);
+                    Language item = SelectedAvailableToMove[i];
+                    if (this.AvailableLanguages.Remove(item))
+                    {
+                        this.SubtitleBehaviours.SelectedLanguages.Add(item);
+                    }
                 }
-
-                this.AvailableLanguages = new BindingList<Language>(this.AvailableLanguages.OrderBy(o => o).ToList());
             }
         }
 

@@ -309,7 +309,7 @@ namespace HandBrakeWPF.ViewModels
         /// <summary>
         /// Add all remaining for selected languages.
         /// </summary>
-        public void AddAllRemainingForSelectedLanguages()
+        public void AddMatchingTracksForSelectedLanguages()
         {
             // Add them if they are not already added.
             foreach (Audio sourceTrack in this.GetTracksMatchingSelectedLanguages())
@@ -445,10 +445,10 @@ namespace HandBrakeWPF.ViewModels
                     this.Task.AudioTracks.Clear();
                     break;
                 case AudioBehaviourModes.FirstMatch: // Add the first track for each language that matches the selected languaged, in-order.
-                    this.AddFirstForSelectedLanguages();
+                    this.AddFirstTrackForSelectedLanguages();
                     break;
                 case AudioBehaviourModes.AllMatching: // Add all tracks that match the selected languages, in-order.
-                    this.AddAllRemainingForSelectedLanguages();
+                    this.AddMatchingTracksForSelectedLanguages();
                     break;
             }
         }
@@ -457,11 +457,13 @@ namespace HandBrakeWPF.ViewModels
         /// Add the first track that matches the selected languages, preferring
         /// those tracks that match the selected output format.
         /// </summary>
-        private void AddFirstForSelectedLanguages()
+        private void AddFirstTrackForSelectedLanguages()
         {
             HashSet<string> addedLanguageCodes = new HashSet<string>();
+            IEnumerable<Audio> tracksMatchingLanguage = GetTracksMatchingSelectedLanguages();
 
-            foreach (Audio selectedTrack in GetTracksMatchingSelectedLanguages())
+
+            foreach (Audio selectedTrack in tracksMatchingLanguage)
             {
                 if (!addedLanguageCodes.Contains(selectedTrack.LanguageCode))
                 {

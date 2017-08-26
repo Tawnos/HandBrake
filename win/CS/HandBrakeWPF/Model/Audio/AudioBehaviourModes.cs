@@ -20,11 +20,11 @@ namespace HandBrakeWPF.Model.Audio
         [ShortName("none")]
         None = 0,
 
-        [DisplayName("First Matching Selected Language")]
+        [DisplayName("First Track Matching Selected Language")]
         [ShortName("first")]
         FirstMatch,
 
-        [DisplayName("All Matching Selected Languages")]
+        [DisplayName("All Tracks Matching Selected Languages")]
         [ShortName("all")]
         AllMatching,
     }

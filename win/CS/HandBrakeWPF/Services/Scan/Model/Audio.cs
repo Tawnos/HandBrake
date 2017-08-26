@@ -175,15 +175,17 @@ namespace HandBrakeWPF.Services.Scan.Model
         /// A hash code for the current <see cref="T:System.Object"/>.
         /// </returns>
         /// <filterpriority>2</filterpriority>
+        /// <remarks>Using Jon Skeet's Method: https://stackoverflow.com/a/263416 </remarks>
         public override int GetHashCode()
         {
             unchecked
             {
-                int result = this.TrackNumber;
-                result = (result * 397) ^ (this.Language != null ? this.Language.GetHashCode() : 0);
-                result = (result * 397) ^ (this.LanguageCode != null ? this.LanguageCode.GetHashCode() : 0);
-                result = (result * 397) ^ (this.Codec != null ? this.Codec.GetHashCode() : 0);
-                return result;
+                int hash = (int)2166136261;
+                hash = (hash * 16777619) ^ (this.TrackNumber);
+                hash = (hash * 16777619) ^ (this.Language != null ? this.Language.GetHashCode() : 0);
+                hash = (hash * 16777619) ^ (this.LanguageCode != null ? this.LanguageCode.GetHashCode() : 0);
+                hash = (hash * 16777619) + this.Codec;
+                return hash;
             }
         }
     }

@@ -852,9 +852,9 @@ namespace HandBrakeWPF.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Are you sure you wish to update the selected preset?.
         /// </summary>
-        public static string Main_PresetUpdateConfrimation {
+        public static string Main_PresetUpdateConfirmation {
             get {
-                return ResourceManager.GetString("Main_PresetUpdateConfrimation", resourceCulture);
+                return ResourceManager.GetString("Main_PresetUpdateConfirmation", resourceCulture);
             }
         }
         

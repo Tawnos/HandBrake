@@ -71,7 +71,6 @@ namespace HandBrakeWPF.ViewModels
         #region Private Variables and Services
 
         private readonly IQueueProcessor queueProcessor;
-        private readonly IPresetService presetService;
         private readonly IErrorService errorService;
         private readonly IUpdateService updateService;
         private readonly IWindowManager windowManager;
@@ -91,7 +90,6 @@ namespace HandBrakeWPF.ViewModels
         private string duration;
         private bool isEncoding;
         private bool showStatusWindow;
-        private Preset selectedPreset;
         private EncodeTask queueEditTask;
         private int lastEncodePercentage;
         private bool isPresetPanelShowing;
@@ -102,6 +100,7 @@ namespace HandBrakeWPF.ViewModels
         private string alertWindowHeader;
         private string alertWindowText;
         private bool hasSource;
+        private Preset selectedPreset;
 
         #endregion
 
@@ -117,9 +116,6 @@ namespace HandBrakeWPF.ViewModels
         /// </param>
         /// <param name="encodeService">
         /// The encode Service.
-        /// </param>
-        /// <param name="presetService">
-        /// The preset Service.
         /// </param>
         /// <param name="errorService">
         /// The Error Service
@@ -165,7 +161,7 @@ namespace HandBrakeWPF.ViewModels
         /// The Meta Data View Model
         /// </param>
         /// <param name="notifyIconService">Wrapper around the WinForms NotifyIcon for this app. </param>
-        public MainViewModel(IUserSettingService userSettingService, IScan scanService, IEncode encodeService, IPresetService presetService, 
+        public MainViewModel(IUserSettingService userSettingService, IScan scanService, IEncode encodeService, 
             IErrorService errorService, IUpdateService updateService, 
             IPrePostActionService whenDoneService, IWindowManager windowManager, IPictureSettingsViewModel pictureSettingsViewModel, IVideoViewModel videoViewModel, 
             IFiltersViewModel filtersViewModel, IAudioViewModel audioViewModel, ISubtitlesViewModel subtitlesViewModel,
@@ -174,7 +170,6 @@ namespace HandBrakeWPF.ViewModels
         {
             this.scanService = scanService;
             this.encodeService = encodeService;
-            this.presetService = presetService;
             this.errorService = errorService;
             this.updateService = updateService;
             this.windowManager = windowManager;
@@ -210,7 +205,6 @@ namespace HandBrakeWPF.ViewModels
             this.queueProcessor.EncodeService.EncodeStatusChanged += this.EncodeStatusChanged;
             this.userSettingService.SettingChanged += this.UserSettingServiceSettingChanged;
 
-            this.Presets = new BindingList<IPresetObject>();
             this.Drives = new BindingList<SourceMenuItem>();
 
             // Set Process Priority
@@ -295,6 +289,11 @@ namespace HandBrakeWPF.ViewModels
         /// </summary>
         public IMetaDataViewModel MetaDataViewModel { get; set; }
 
+        /// <summary>
+        /// Gets or sets the The Presets View Model
+        /// </summary>
+        public IPresetsViewModel PresetsViewModel { get; set; }
+
         #endregion
 
         #region Properties
@@ -359,64 +358,6 @@ namespace HandBrakeWPF.ViewModels
                     this.NotifyOfPropertyChange(() => this.StatusLabel);
                 }
             }
-        }
-
-        /// <summary>
-        /// Gets or sets Presets.
-        /// </summary>
-        public IEnumerable<IPresetObject> Presets { get; set; }
-
-        /// <summary>
-        /// Gets or sets SelectedPreset.
-        /// </summary>
-        public object SelectedPreset
-        {
-            get
-            {
-                return this.selectedPreset;
-            }
-
-            set
-            {
-                if (value == null || value.GetType() != typeof(Preset))
-                {
-                    return;
-                }
-
-                this.selectedPreset = (Preset)value;
-
-                this.presetService.SetSelected(selectedPreset);
-  
-                if (this.selectedPreset != null)
-                {
-                    // Main Window Settings
-                    this.OptimizeMP4 = selectedPreset.Task.OptimizeMP4;
-                    this.IPod5GSupport = selectedPreset.Task.IPod5GSupport;
-                    this.SelectedOutputFormat = selectedPreset.Task.OutputFormat;
-                    this.AlignAVStart = selectedPreset.Task.AlignAVStart;
-
-                    // Tab Settings
-                    this.PictureSettingsViewModel.SetPreset(this.selectedPreset, this.CurrentTask);
-                    this.VideoViewModel.SetPreset(this.selectedPreset, this.CurrentTask);
-                    this.FiltersViewModel.SetPreset(this.selectedPreset, this.CurrentTask);
-                    this.AudioViewModel.SetPreset(this.selectedPreset, this.CurrentTask);
-                    this.SubtitleViewModel.SetPreset(this.selectedPreset, this.CurrentTask);
-                    this.ChaptersViewModel.SetPreset(this.selectedPreset, this.CurrentTask);
-                    this.AdvancedViewModel.SetPreset(this.selectedPreset, this.CurrentTask);
-                    this.MetaDataViewModel.SetPreset(this.selectedPreset, this.CurrentTask);
-
-                    // Do this again to force an update for m4v/mp4 selection
-                    this.SelectedOutputFormat = selectedPreset.Task.OutputFormat;
-                }
-
-                this.NotifyOfPropertyChange(() => this.SelectedPreset);
-            }
-        }
-
-        public void TrickPresetDisplayUpdate()
-        {
-            this.NotifyOfPropertyChange(() => this.SelectedPreset);
-            this.selectedPreset.IsSelected = true;
         }
 
         /// <summary>
@@ -782,6 +723,55 @@ namespace HandBrakeWPF.ViewModels
             }
         }
 
+
+
+        /// <summary>
+        /// Gets or sets SelectedPreset.
+        /// </summary>
+        public Preset SelectedPreset
+        {
+            get
+            {
+                return this.selectedPreset;
+            }
+
+            set
+            {
+                if (value == null || value.GetType() != typeof(Preset))
+                {
+                    return;
+                }
+
+                //this.selectedPreset = (Preset)value;
+
+                //this.presetService.SetSelected(selectedPreset);
+
+                //if (this.selectedPreset != null)
+                //{
+                //    // Main Window Settings
+                //    this.OptimizeMP4 = selectedPreset.Task.OptimizeMP4;
+                //    this.IPod5GSupport = selectedPreset.Task.IPod5GSupport;
+                //    this.SelectedOutputFormat = selectedPreset.Task.OutputFormat;
+                //    this.AlignAVStart = selectedPreset.Task.AlignAVStart;
+
+                //    // Tab Settings
+                //    this.PictureSettingsViewModel.SetPreset(this.selectedPreset, this.CurrentTask);
+                //    this.VideoViewModel.SetPreset(this.selectedPreset, this.CurrentTask);
+                //    this.FiltersViewModel.SetPreset(this.selectedPreset, this.CurrentTask);
+                //    this.AudioViewModel.SetPreset(this.selectedPreset, this.CurrentTask);
+                //    this.SubtitleViewModel.SetPreset(this.selectedPreset, this.CurrentTask);
+                //    this.ChaptersViewModel.SetPreset(this.selectedPreset, this.CurrentTask);
+                //    this.AdvancedViewModel.SetPreset(this.selectedPreset, this.CurrentTask);
+                //    this.MetaDataViewModel.SetPreset(this.selectedPreset, this.CurrentTask);
+
+                //    // Do this again to force an update for m4v/mp4 selection
+                //    this.SelectedOutputFormat = selectedPreset.Task.OutputFormat;
+                //}
+
+                this.NotifyOfPropertyChange(() => this.SelectedPreset);
+            }
+        }
+
         /// <summary>
         /// Gets or sets SelectedTitle.
         /// </summary>
@@ -824,7 +814,7 @@ namespace HandBrakeWPF.ViewModels
                     {
                         if (this.userSettingService.GetUserSetting<string>(UserSettingConstants.AutoNameFormat) != null)
                         {
-                            this.Destination = AutoNameHelper.AutoName(this.CurrentTask, this.SourceName, this.selectedPreset);
+                            this.Destination = AutoNameHelper.AutoName(this.CurrentTask, this.SourceName, this.PresetsViewModel.SelectedPreset);
                         }
                     }
                     this.NotifyOfPropertyChange(() => this.CurrentTask);
@@ -879,7 +869,7 @@ namespace HandBrakeWPF.ViewModels
                     if (this.SelectedPointToPoint == PointToPointMode.Chapters && this.userSettingService.GetUserSetting<string>(UserSettingConstants.AutoNameFormat) != null &&
                         this.userSettingService.GetUserSetting<string>(UserSettingConstants.AutoNameFormat).Contains(Constants.Chapters))
                     {
-                        this.Destination = AutoNameHelper.AutoName(this.CurrentTask, this.SourceName, this.selectedPreset);
+                        this.Destination = AutoNameHelper.AutoName(this.CurrentTask, this.SourceName, this.PresetsViewModel.SelectedPreset);
                     }
                 }
 
@@ -908,7 +898,7 @@ namespace HandBrakeWPF.ViewModels
                 if (this.SelectedPointToPoint == PointToPointMode.Chapters && this.userSettingService.GetUserSetting<string>(UserSettingConstants.AutoNameFormat) != null &&
                     this.userSettingService.GetUserSetting<string>(UserSettingConstants.AutoNameFormat).Contains(Constants.Chapters))
                 {
-                    this.Destination = AutoNameHelper.AutoName(this.CurrentTask, this.SourceName, this.selectedPreset);
+                    this.Destination = AutoNameHelper.AutoName(this.CurrentTask, this.SourceName, this.PresetsViewModel.SelectedPreset);
                 }
 
                 if (this.SelectedStartPoint > this.SelectedEndPoint && this.SelectedPointToPoint == PointToPointMode.Chapters)
@@ -1281,10 +1271,10 @@ namespace HandBrakeWPF.ViewModels
             this.IsPresetPanelShowing = this.userSettingService.GetUserSetting<bool>(UserSettingConstants.ShowPresetPanel);
 
             // Setup the presets.
-            this.presetService.Load();
-            this.Presets = this.presetService.Presets;
-            this.NotifyOfPropertyChange(() => this.Presets);
-            this.presetService.LoadCategoryStates();
+            //this.presetService.Load();
+            //this.Presets = this.presetService.Presets;
+            //this.NotifyOfPropertyChange(() => this.Presets);
+            //this.presetService.LoadCategoryStates();
 
             // Queue Recovery
             bool queueRecovered = QueueRecoveryHelper.RecoverQueue(this.queueProcessor, this.errorService, StartupOptions.AutoRestartQueue);
@@ -1305,7 +1295,7 @@ namespace HandBrakeWPF.ViewModels
                 this.queueProcessor.Start(this.userSettingService.GetUserSetting<bool>(UserSettingConstants.ClearCompletedFromQueue));
             }
 
-            this.SelectedPreset = this.presetService.DefaultPreset;
+            //this.SelectedPreset = this.presetService.DefaultPreset;
 
             // Reset WhenDone if necessary.
             if (this.userSettingService.GetUserSetting<bool>(UserSettingConstants.ResetWhenDoneAction))
@@ -1328,7 +1318,7 @@ namespace HandBrakeWPF.ViewModels
         {
             // Shutdown Service
             this.encodeService.Stop();
-            this.presetService.SaveCategoryStates();
+            //this.presetService.SaveCategoryStates();
 
             // Unsubscribe from Events.
             this.scanService.ScanStarted -= this.ScanStared;
@@ -1594,7 +1584,7 @@ namespace HandBrakeWPF.ViewModels
                     this.SelectedTitle = title.Title;
                     this.AddToQueue();
                 }
-            }, this.selectedPreset);
+            }, this.PresetsViewModel.SelectedPreset);
 
             if (window != null)
             {
@@ -1908,202 +1898,6 @@ namespace HandBrakeWPF.ViewModels
         }
 
         /// <summary>
-        /// Add a Preset
-        /// </summary>
-        public void PresetAdd()
-        {
-            // TODO select the new preset.
-            IAddPresetViewModel presetViewModel = IoC.Get<IAddPresetViewModel>();
-            presetViewModel.Setup(this.CurrentTask, this.SelectedTitle, this.AudioViewModel.AudioBehaviours, this.SubtitleViewModel.SubtitleBehaviours);
-            this.windowManager.ShowDialog(presetViewModel);
-            this.NotifyOfPropertyChange(() => this.Presets);
-        }
-
-        /// <summary>
-        /// Update a selected preset.
-        /// </summary>
-        public void PresetUpdate()
-        {
-            if (this.SelectedPreset == null)
-            {
-                this.errorService.ShowMessageBox(
-                    Resources.Main_SelectPresetForUpdate, Resources.Main_NoPresetSelected, MessageBoxButton.OK, MessageBoxImage.Warning);
-
-                return;
-            }
-
-            if (this.selectedPreset.IsBuildIn)
-            {
-                this.errorService.ShowMessageBox(
-                    Resources.Main_NoUpdateOfBuiltInPresets, Resources.Main_NoPresetSelected, MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (this.errorService.ShowMessageBox(Resources.Main_PresetUpdateConfrimation, Resources.AreYouSure, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-            {
-                this.selectedPreset.Update(new EncodeTask(this.CurrentTask), new AudioBehaviours(this.AudioViewModel.AudioBehaviours), new SubtitleBehaviours(this.SubtitleViewModel.SubtitleBehaviours));
-                this.presetService.Update(this.selectedPreset);
-
-                this.errorService.ShowMessageBox(
-                        Resources.Main_PresetUpdated, Resources.Updated, MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-        }
-
-        /// <summary>
-        /// Manage the current Preset
-        /// </summary>
-        public void PresetManage()
-        {
-            if (this.SelectedPreset == null)
-            {
-                this.errorService.ShowMessageBox(
-                    Resources.Main_SelectPresetForUpdate, Resources.Main_NoPresetSelected, MessageBoxButton.OK, MessageBoxImage.Warning);
-
-                return;
-            }
-
-            if (this.selectedPreset.IsBuildIn)
-            {
-                this.errorService.ShowMessageBox(
-                    Resources.Main_NoUpdateOfBuiltInPresets, Resources.Main_NoPresetSelected, MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            IManagePresetViewModel presetViewModel = IoC.Get<IManagePresetViewModel>();
-            presetViewModel.Setup(this.selectedPreset);
-            this.windowManager.ShowDialog(presetViewModel);
-            Preset preset = presetViewModel.Preset;
-
-            this.SelectedPreset = preset; // Reselect the preset
-        }
-
-        /// <summary>
-        /// Remove a Preset
-        /// </summary>
-        public void PresetRemove()
-        {
-            if (this.selectedPreset != null)
-            {
-                if (this.selectedPreset.IsDefault)
-                {
-                    this.errorService.ShowMessageBox(
-                      Resources.MainViewModel_CanNotDeleteDefaultPreset, 
-                      Resources.Warning, 
-                      MessageBoxButton.OK, 
-                      MessageBoxImage.Information);
-
-                    return;
-                }
-
-                MessageBoxResult result =
-                this.errorService.ShowMessageBox(
-                   Resources.MainViewModel_PresetRemove_AreYouSure + this.selectedPreset.Name + " ?", 
-                   Resources.Question, 
-                   MessageBoxButton.YesNo, 
-                   MessageBoxImage.Question);
-
-                if (result == MessageBoxResult.No)
-                {
-                    return;
-                }
-
-                this.presetService.Remove(this.selectedPreset);
-                this.NotifyOfPropertyChange(() => this.Presets);
-            }
-            else
-            {
-                MessageBox.Show(Resources.Main_SelectPreset, Resources.Warning, MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-
-        /// <summary>
-        /// Set a default preset
-        /// </summary>
-        public void PresetSetDefault()
-        {
-            if (this.selectedPreset != null)
-            {
-                this.presetService.SetDefault(this.selectedPreset);
-                MessageBox.Show(string.Format(Resources.Main_NewDefaultPreset, this.selectedPreset.Name), Resources.Main_Presets, MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            else
-            {
-                MessageBox.Show(Resources.Main_SelectPreset, Resources.Warning, MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-
-        /// <summary>
-        /// Import a Preset
-        /// </summary>
-        public void PresetImport()
-        {
-            OpenFileDialog dialog = new OpenFileDialog { Filter = "Preset Files|*.json;*.plist", CheckFileExists = true };
-            bool? dialogResult = dialog.ShowDialog();
-            if (dialogResult.HasValue && dialogResult.Value)
-            {
-                this.presetService.Import(dialog.FileName);
-                this.NotifyOfPropertyChange(() => this.Presets);
-            }
-        }
-
-        /// <summary>
-        /// Export a Preset
-        /// </summary>
-        public void PresetExport()
-        {
-            if (this.selectedPreset != null && !this.selectedPreset.IsBuildIn)
-            {
-                SaveFileDialog savefiledialog = new SaveFileDialog
-                                                {
-                                                    Filter = "json|*.json",
-                                                    CheckPathExists = true,
-                                                    AddExtension = true,
-                                                    DefaultExt = ".json",
-                                                    OverwritePrompt = true,
-                                                    FilterIndex = 0
-                                                };
-
-                savefiledialog.ShowDialog();
-                string filename = savefiledialog.FileName;
-
-                if (!string.IsNullOrEmpty(filename))
-                {
-                    this.presetService.Export(savefiledialog.FileName, this.selectedPreset, HBConfigurationFactory.Create());
-                }
-            }
-            else
-            {
-                MessageBox.Show(Resources.Main_SelectPreset, Resources.Warning, MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-
-        /// <summary>
-        /// Reset built-in presets
-        /// </summary>
-        public void PresetReset()
-        {
-            this.presetService.UpdateBuiltInPresets();
-            this.NotifyOfPropertyChange(() => this.Presets);
-            this.SelectedPreset = this.presetService.DefaultPreset;
-            this.errorService.ShowMessageBox(Resources.Presets_ResetComplete, Resources.Presets_ResetHeader, MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        /// <summary>
-        /// The preset select.
-        /// </summary>
-        /// <param name="tag">
-        /// The tag.
-        /// </param>
-        public void PresetSelect(object tag)
-        {
-            Preset preset = tag as Preset;
-            if (preset != null)
-            {
-                this.SelectedPreset = preset;
-            }
-        }
-
-        /// <summary>
         /// Start a Scan
         /// </summary>
         /// <param name="filename">
@@ -2263,14 +2057,14 @@ namespace HandBrakeWPF.ViewModels
             // Setup the Tabs
             if (this.selectedTitle != null)
             {
-                this.PictureSettingsViewModel.SetSource(this.ScannedSource, this.SelectedTitle, this.selectedPreset, this.CurrentTask);
-                this.VideoViewModel.SetSource(this.ScannedSource, this.SelectedTitle, this.selectedPreset, this.CurrentTask);
-                this.FiltersViewModel.SetSource(this.ScannedSource, this.SelectedTitle, this.selectedPreset, this.CurrentTask);
-                this.AudioViewModel.SetSource(this.ScannedSource, this.SelectedTitle, this.selectedPreset, this.CurrentTask);
-                this.SubtitleViewModel.SetSource(this.ScannedSource, this.SelectedTitle, this.selectedPreset, this.CurrentTask);
-                this.ChaptersViewModel.SetSource(this.ScannedSource, this.SelectedTitle, this.selectedPreset, this.CurrentTask);
-                this.AdvancedViewModel.SetSource(this.ScannedSource, this.SelectedTitle, this.selectedPreset, this.CurrentTask);
-                this.MetaDataViewModel.SetSource(this.ScannedSource, this.SelectedTitle, this.selectedPreset, this.CurrentTask);
+                this.PictureSettingsViewModel.SetSource(this.ScannedSource, this.SelectedTitle, this.SelectedPreset, this.CurrentTask);
+                this.VideoViewModel.SetSource(this.ScannedSource, this.SelectedTitle,    this.SelectedPreset, this.CurrentTask);
+                this.FiltersViewModel.SetSource(this.ScannedSource, this.SelectedTitle,  this.SelectedPreset, this.CurrentTask);
+                this.AudioViewModel.SetSource(this.ScannedSource, this.SelectedTitle,    this.SelectedPreset, this.CurrentTask);
+                this.SubtitleViewModel.SetSource(this.ScannedSource, this.SelectedTitle, this.SelectedPreset, this.CurrentTask);
+                this.ChaptersViewModel.SetSource(this.ScannedSource, this.SelectedTitle, this.SelectedPreset, this.CurrentTask);
+                this.AdvancedViewModel.SetSource(this.ScannedSource, this.SelectedTitle, this.SelectedPreset, this.CurrentTask);
+                this.MetaDataViewModel.SetSource(this.ScannedSource, this.SelectedTitle, this.SelectedPreset, this.CurrentTask);
             }
         }
 

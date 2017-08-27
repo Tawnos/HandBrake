@@ -47,7 +47,7 @@ namespace HandBrakeWPF.Commands
         /// <param name="parameter">Data used by the command.  If the command does not require data to be passed, this object can be set to null.</param>
         public void Execute(object parameter)
         {
-            IMainViewModel mvm = IoC.Get<IMainViewModel>();
+            IPresetsViewModel mvm = IoC.Get<IPresetsViewModel>();
             mvm.PresetSelect(this.preset);
         }
 

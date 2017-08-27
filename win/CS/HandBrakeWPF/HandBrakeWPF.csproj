@@ -275,6 +275,7 @@
     <Compile Include="Utilities\Win32.cs" />
     <Compile Include="Utilities\Win7.cs" />
     <Compile Include="ViewModels\Interfaces\IManagePresetViewModel.cs" />
+    <Compile Include="ViewModels\Interfaces\IPresetsViewModel.cs" />
     <Compile Include="ViewModels\ManagePresetViewModel.cs" />
     <Compile Include="ViewModels\AudioDefaultsViewModel.cs" />
     <Compile Include="ViewModels\CountdownAlertViewModel.cs" />
@@ -293,6 +294,7 @@
     <Compile Include="ViewModels\PopupWindowViewModel.cs" />
     <Compile Include="ViewModels\StaticPreviewViewModel.cs" />
     <Compile Include="ViewModels\SubtitlesDefaultsViewModel.cs" />
+    <Compile Include="ViewModels\PresetsViewModel.cs" />
     <Compile Include="Views\ManagePresetView.xaml.cs">
       <DependentUpon>ManagePresetView.xaml</DependentUpon>
     </Compile>
@@ -419,6 +421,9 @@
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="Views\SubtitlesDefaultsView.xaml.cs">
       <DependentUpon>SubtitlesDefaultsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\PresetsView.xaml.cs">
+      <DependentUpon>PresetsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\X264View.xaml.cs">
       <DependentUpon>X264View.xaml</DependentUpon>
@@ -574,6 +579,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\SubtitlesDefaultsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\PresetsView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

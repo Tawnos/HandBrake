@@ -383,7 +383,7 @@ In order to use the QuickSync encoder, you must:
   <data name="Main_Presets" xml:space="preserve">
     <value>Presets</value>
   </data>
-  <data name="Main_PresetUpdateConfrimation" xml:space="preserve">
+  <data name="Main_PresetUpdateConfirmation" xml:space="preserve">
     <value>Are you sure you wish to update the selected preset?</value>
   </data>
   <data name="Main_PresetUpdated" xml:space="preserve">
